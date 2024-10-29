@@ -436,6 +436,10 @@ def section(request, section_id):
         except Exception as e:
             return JsonResponse({"detail": str(e)}, status=500)
 
+# ===========================
+# Content Block APIs
+# ===========================
+
 @role_required(['admin'])        
 def landing(request):
     now = datetime.datetime.now()
