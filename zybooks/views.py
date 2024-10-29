@@ -327,6 +327,115 @@ def chapter(request, chapter_id):
             return JsonResponse({"detail": str(e)}, status=500)    
 
 
+
+# ===========================
+# SECTION APIs
+# ===========================
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+@require_http_methods(["POST"])
+def create_section(request):
+    try:
+        data = json.loads(request.body)
+        
+        # Check if the section already exists
+        if Section.objects.filter(section_id=data.get("section_id")).exists():
+            return JsonResponse({"detail": "Section with this ID already exists"}, status=400)
+        
+        # Check if the referenced chapter exists
+        chapter_id = data.get("chapter_id")
+        try:
+            chapter = Chapter.objects.get(chapter_id=chapter_id)
+        except Chapter.DoesNotExist:
+            return JsonResponse({"detail": "Chapter with this ID does not exist"}, status=400)
+        
+        # Create and save new section
+        section = Section.objects.create(
+            section_id=data.get("section_id"),
+            number=data.get("number"),
+            title=data.get("title"),
+            chapter=chapter,
+            hidden=data.get("hidden", False)
+        )
+        return JsonResponse({
+            "section_id": section.section_id,
+            "number": section.number,
+            "title": section.title,
+            "chapter_id": section.chapter.chapter_id,
+            "hidden": section.hidden
+        }, status=200)
+    
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def read_section(request):
+    try:
+        # Fetch all sections if no ID is provided
+        sections = Section.objects.all().values("section_id", "number", "title", "chapter_id", "hidden")
+        return JsonResponse(list(sections), safe=False, status=200)
+    
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+@require_http_methods(["GET", "PUT", "DELETE"])
+def section(request, section_id):
+    section_id = float(section_id)
+    if request.method == "GET":        
+        if section_id:
+            try:
+                section = Section.objects.get(section_id=section_id)
+                return JsonResponse({
+                    "section_id": section.section_id,
+                    "number": section.number,
+                    "title": section.title,
+                    "chapter_id": section.chapter.chapter_id,
+                    "hidden": section.hidden
+                }, status=200)
+            except Section.DoesNotExist:
+                return JsonResponse({"detail": "Section not found"}, status=404)
+    
+    elif request.method == "PUT":
+        try:
+            data = json.loads(request.body)
+            
+            try:
+                section = Section.objects.get(section_id=section_id)
+            except Section.DoesNotExist:
+                return JsonResponse({"detail": "Section not found"}, status=404)
+            
+            section.number = data.get("number", section.number)
+            section.title = data.get("title", section.title)
+            section.hidden = data.get("hidden", section.hidden)
+            section.save()
+            
+            return JsonResponse({
+                "section_id": section.section_id,
+                "number": section.number,
+                "title": section.title,
+                "chapter_id": section.chapter.chapter_id,
+                "hidden": section.hidden
+            }, status=200)
+        
+        except Exception as e:
+            return JsonResponse({"detail": str(e)}, status=500)
+        
+    elif request.method == "DELETE":
+        try:
+            try:
+                section = Section.objects.get(section_id=section_id)
+            except Section.DoesNotExist:
+                return JsonResponse({"detail": "Section not found"}, status=404)
+            
+            section.delete()
+            return JsonResponse({"message": "Section deleted successfully"}, status=200)
+        
+        except Exception as e:
+            return JsonResponse({"detail": str(e)}, status=500)
+
 @role_required(['admin'])        
 def landing(request):
     now = datetime.datetime.now()
