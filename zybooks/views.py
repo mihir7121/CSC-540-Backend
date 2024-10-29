@@ -239,7 +239,7 @@ def create_chapter(request):
             return JsonResponse({"detail": "Chapter with this ID already exists"}, status=400)
         
         # Check if the referenced textbook exists
-        textbook_id = data.get("textbook")
+        textbook_id = data.get("textbook_id")
         try:
             textbook = Textbook.objects.get(textbook_id=textbook_id)
         except Textbook.DoesNotExist:
@@ -247,7 +247,7 @@ def create_chapter(request):
         
         # Create and save new chapter
         chapter = Chapter.objects.create(
-            chapter_id = data.get('chapter_id'),
+            chapter_id = data.get("chapter_id"),
             title=data.get("title"),
             textbook=textbook,
             hidden=data.get("hidden", False)
@@ -255,7 +255,7 @@ def create_chapter(request):
         return JsonResponse({
             "chapter_id": chapter.chapter_id,
             "title": chapter.title,
-            "textbook": chapter.textbook,
+            "textbook_id": chapter.textbook.textbook_id,
             "hidden": chapter.hidden
         }, status=200)
     
