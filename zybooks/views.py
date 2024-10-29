@@ -113,8 +113,8 @@ def add_section(request):
         return JsonResponse({"message": "Section added successfully!"}, status=201)
     return JsonResponse({"error": "Only POST method is allowed."}, status=405)
 
-@role_required(['admin'])
-def get_chapter(request, chapter_id):
+# @role_required(['admin'])
+# def get_chapter(request, chapter_id):
     try:
         chapter = Chapter.objects.get(chapter_id=chapter_id)
         sections = Section.objects.filter(chapter=chapter)
@@ -284,7 +284,7 @@ def chapter(request, chapter_id):
                 return JsonResponse({
                     "chapter_id": chapter.chapter_id,
                     "title": chapter.title,
-                    "textbook": chapter.textbook,
+                    "textbook_id": chapter.textbook.textbook_id,
                     "hidden": chapter.hidden
                 }, status=200)
             except Chapter.DoesNotExist:
@@ -306,7 +306,7 @@ def chapter(request, chapter_id):
             return JsonResponse({
                 "chapter_id": chapter.chapter_id,
                 "title": chapter.title,
-                "textbook": chapter.textbook,
+                "textbook_id": chapter.textbook.textbook_id,
                 "hidden": chapter.hidden
             }, status=200)
         
