@@ -26,7 +26,6 @@ urlpatterns = [
     path('contents/<int:content_id>/', views.content, name='content'),
     path('contents/<int:content_id>/text/', views.content_text, name='content_text'),
     path('contents/<int:content_id>/image/', views.content_image, name='content_image'),
-    path('courses/',views.create_courses,name='create_courses'),
     
     path('activities/', views.create_activity, name='create_activity'),
     path('activities/all/', views.read_activity, name='create_activity'),
@@ -35,11 +34,18 @@ urlpatterns = [
     path('questions/', views.create_question, name='create_question'),
     path('questions/all/', views.read_questions, name='create_question'),
     path('questions/<int:question_id>/', views.question, name='question'),
+
+    path('courses/', views.create_course, name='create_course'),
+    path('courses/all/', views.read_courses, name='read_courses'),
+    path('courses/<int:course_id>/', views.course, name='course'),
     
+<<<<<<< HEAD
     path('courses/', views.get_all_courses, name='get-all-courses'),       # GET all courses
     path('courses/<int:course_id>/', views.get_course_by_id, name='get-course-by-id'),  # GET a course by ID
     path('courses/<int:course_id>/delete/', views.delete_course, name='delete-course'),  # DELETE a course by ID
     path('courses/create/', views.create_courses, name='create-course'),      # POST create a new course
     path('createta/',views.create_ta,name='create-ta'), # create TA
     path('changepassword/',views.change_password,name="change-password") # change password
+=======
+>>>>>>> e5cacefe0f64f0e885902679e3f211c263808732
 ]
