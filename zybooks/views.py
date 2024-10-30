@@ -527,8 +527,54 @@ def content(request, content_id):
     
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
+
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+def content_text(request, content_id):
+    if request.method == "POST":
+        try:
+            content = Content.objects.get(content_id=content_id)
+            data = json.loads(request.body)
+            
+            content.block_type = 'text' 
+
+            if not data.get("text_data"):
+                return JsonResponse({"detail": "Missing 'text_data' for text content block"}, status=400)
+            
+            content.text_data = data.get("text_data")
+            content.save()
+
+            return JsonResponse({"detail": "Text added successfully"}, status=200)
+        except Content.DoesNotExist:
+            return JsonResponse({"detail": "Content block with this ID does not exist"}, status=404)
+
+        except Exception as e:
+            return JsonResponse({"detail": str(e)}, status=500)
+    return JsonResponse({"detail": "Only POST request allowed"}, status=500)
     
 
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+def content_image(request, content_id):
+    if request.method == "POST":
+        try:
+            content = Content.objects.get(content_id=content_id)
+            content.block_type = 'image'
+
+            if 'image_data' not in request.FILES:
+                return JsonResponse({"detail": "Missing 'image_data' file for image content block"}, status=400)
+
+            content.image_data = request.FILES['image_data']
+            content.save()
+
+            return JsonResponse({"detail": "Image added successfully", "image_url": request.build_absolute_uri(content.image_data.url)}, status=200)
+
+        except Content.DoesNotExist:
+            return JsonResponse({"detail": "Content block with this ID does not exist"}, status=404)
+
+        except Exception as e:
+            return JsonResponse({"detail": str(e)}, status=500)
+    return JsonResponse({"detail": "Only POST request allowed"}, status=500)
 
 @role_required(['admin'])        
 def landing(request):

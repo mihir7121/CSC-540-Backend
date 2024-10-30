@@ -14,14 +14,17 @@ urlpatterns = [
     path('textbooks/<int:textbook_id>/', views.textbook, name='textbook'),
 
     path('chapters/', views.create_chapter, name='create_chapter'),
-    path('chapters/all', views.read_chapter, name='create_chapter'),
+    path('chapters/all/', views.read_chapter, name='create_chapter'),
     path('chapters/<int:chapter_id>/', views.chapter, name='chapter'),
 
     path('sections/', views.create_section, name='create_section'),
-    path('sections/all', views.read_section, name='create_section'),
+    path('sections/all/', views.read_section, name='create_section'),
     path('sections/<str:section_id>/', views.section, name='section'),
 
     path('contents/', views.create_content, name='create_content'),
-    path('contents/all', views.read_content, name='create_content'),
+    path('contents/all/', views.read_content, name='create_content'),
     path('contents/<int:content_id>/', views.content, name='content'),
+    path('contents/<int:content_id>/text/', views.content_text, name='content_text'),
+    path('contents/<int:content_id>/image/', views.content_image, name='content_image')
+
 ]
