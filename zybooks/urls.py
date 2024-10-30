@@ -20,4 +20,8 @@ urlpatterns = [
     path('sections/', views.create_section, name='create_section'),
     path('sections/all', views.read_section, name='create_section'),
     path('sections/<str:section_id>/', views.section, name='section'),
+
+    path('contents/', views.create_content, name='create_content'),
+    path('contents/all', views.read_content, name='create_content'),
+    path('contents/<int:content_id>/', views.content, name='content'),
 ]

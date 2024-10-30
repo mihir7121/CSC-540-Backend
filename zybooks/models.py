@@ -83,7 +83,11 @@ class Section(models.Model):
     number = models.CharField(max_length=10)
     title = models.CharField(max_length=100)
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
+    textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
     hidden = models.BooleanField()
+
+    class Meta:
+        unique_together = ('chapter', 'textbook', 'number')
 
 class Content(models.Model):
     BLOCK_TYPE_CHOICES = [

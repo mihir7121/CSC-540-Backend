@@ -344,10 +344,13 @@ def create_section(request):
         
         # Check if the referenced chapter exists
         chapter_id = data.get("chapter_id")
+        textbook_id = data.get("textbook_id")
         try:
             chapter = Chapter.objects.get(chapter_id=chapter_id)
+            textbook = Textbook.objects.get(textbook_id=textbook_id)
         except Chapter.DoesNotExist:
             return JsonResponse({"detail": "Chapter with this ID does not exist"}, status=400)
+        
         
         # Create and save new section
         section = Section.objects.create(
@@ -355,6 +358,7 @@ def create_section(request):
             number=data.get("number"),
             title=data.get("title"),
             chapter=chapter,
+            textbook=textbook,
             hidden=data.get("hidden", False)
         )
         return JsonResponse({
@@ -362,6 +366,7 @@ def create_section(request):
             "number": section.number,
             "title": section.title,
             "chapter_id": section.chapter.chapter_id,
+            "textbook_id": section.textbook.textbook_id,
             "hidden": section.hidden
         }, status=200)
     
@@ -439,6 +444,91 @@ def section(request, section_id):
 # ===========================
 # Content Block APIs
 # ===========================
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+@require_http_methods(["POST"])
+def create_content(request):
+    try:
+        data = json.loads(request.body)
+        
+        # Check if the referenced section exists
+        section_id = float(data.get("section_id"))
+        try:
+            section = Section.objects.get(section_id=section_id)
+        except Section.DoesNotExist:
+            return JsonResponse({"detail": "Section with this ID does not exist"}, status=400)
+        
+        # Create and save new content
+        content = Content.objects.create(
+            content_id=data.get("content_id"),
+            section=section,
+            hidden=data.get("hidden", False)
+        )
+        return JsonResponse({
+            "content_id": content.content_id,
+            "section_id": content.section.section_id,
+            "hidden": content.hidden
+        }, status=200)
+    
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def read_content(request):
+    try:
+        # Fetch all content blocks
+        contents = Content.objects.all().values("content_id", "block_type", "text_data", "image_data", "section_id", "hidden")
+        return JsonResponse(list(contents), safe=False, status=200)
+    
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+@require_http_methods(["GET", "PUT", "DELETE"])
+def content(request, content_id):
+    try:
+        # Fetch specific content block by ID
+        content = Content.objects.get(content_id=content_id)
+        
+        if request.method == "GET":
+            return JsonResponse({
+                "content_id": content.content_id,
+                "block_type": content.block_type,
+                "text_data": content.text_data,
+                "image_data": content.image_data.url if content.image_data else None,
+                "section_id": content.section.section_id,
+                "hidden": content.hidden
+            }, status=200)
+        
+        elif request.method == "PUT":
+            data = json.loads(request.body)
+            
+            # Update fields with validation
+            content.block_type = data.get("block_type", content.block_type)
+            if content.block_type == 'text':
+                content.text_data = data.get("text_data", content.text_data)
+                content.image_data = None  # Clear image data for text blocks
+            elif content.block_type == 'image':
+                content.image_data = data.get("image_data", content.image_data)
+                content.text_data = None  # Clear text data for image blocks
+
+            content.hidden = data.get("hidden", content.hidden)
+            content.save()
+            return JsonResponse({"detail": "Content updated successfully"}, status=200)
+        
+        elif request.method == "DELETE":
+            content.delete()
+            return JsonResponse({"detail": "Content deleted successfully"}, status=204)
+    
+    except Content.DoesNotExist:
+        return JsonResponse({"detail": "Content with this ID does not exist"}, status=404)
+    
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+    
+
 
 @role_required(['admin'])        
 def landing(request):
