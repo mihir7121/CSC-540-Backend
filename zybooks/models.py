@@ -54,7 +54,6 @@ class TA(models.Model):
     ta_username = models.OneToOneField(User, on_delete=models.CASCADE, related_name="assigned_tas")
     faculty_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="faculty_supervised_tas")
 
-
 class Enrollment(models.Model):
     ENROLLMENT_CHOICES = [
         ('pending', 'Pending'),
@@ -66,7 +65,6 @@ class Enrollment(models.Model):
 
     class Meta:
         unique_together = ('student', 'course')
-
 
 class Textbook(models.Model):
     textbook_id = models.PositiveIntegerField(primary_key=True)

@@ -7,7 +7,7 @@ from django.http import HttpResponse
 import datetime
 import json
 from django.http import JsonResponse
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import check_password, make_password, verify_password
 from .models import User
 from .decorators import role_required
 from django.views.decorators.csrf import csrf_exempt
@@ -913,7 +913,7 @@ def delete_course(request, course_id):
 # ADD TA
 # ===========================  
 @csrf_exempt
-# @role_required(['faculty'])
+@role_required(['faculty'])
 @require_http_methods(["POST"])
 def create_ta(request):
     if request.method == 'POST':
@@ -944,3 +944,42 @@ def create_ta(request):
             return JsonResponse({"success": "TA created successfully"}, status=201)
 
     return JsonResponse({"error": "Only POST method is allowed"}, status=405)
+
+# ================
+# Change Password
+# ================
+@csrf_exempt
+@require_http_methods(["POST"])
+def change_password(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError as e:
+            return JsonResponse({'error': 'Invalid JSON: ' + str(e)}, status=400)
+
+        old_password = data.get("old_password")
+        new_password = data.get("new_password")
+        username = request.COOKIES.get('username')
+
+        # Fetch the user by username
+        user = User.objects.filter(username=username).first()
+        if user is None:
+            return JsonResponse({'error': 'User not found'}, status=404)
+
+        print(make_password(old_password))
+        print(user.password)
+        # Check if the old password is correct
+        if not verify_password(old_password, user.password):
+
+            return JsonResponse({'error': 'Wrong Old Password'}, status=403)
+
+        # Update the password
+        user.password = make_password(new_password)  # Hash the new password
+        user.save()
+        return JsonResponse({'success': 'Password Changed'}, status=200)
+
+    return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
+
+
+
+    
