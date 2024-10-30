@@ -3,6 +3,8 @@ from .models import *
 # Register your models here.
 
 admin.site.register(User)
+admin.site.register(TA)
+# admin.site.register(Student)
 admin.site.register(Course)
 admin.site.register(Textbook)
 admin.site.register(Chapter)

@@ -31,6 +31,15 @@ class User(models.Model):
     def __str__(self):
         return f"{self.username} ({self.role})"
 
+class TA(models.Model):
+    ta = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ta_name', null=True)
+    associated_faculty = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='tas')
+    hourly_pay = models.DecimalField(max_digits=5, decimal_places=2)
+    hours_per_week = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name} - TA for {self.associated_faculty.user.last_name}"
+
 class Course(models.Model):
     TYPE_CHOICES = [
         ('active', 'Active'),
@@ -44,7 +53,8 @@ class Course(models.Model):
     end_date = models.DateField(blank=True, null=True)
     course_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     course_capacity = models.PositiveIntegerField() 
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    faculty = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="course_faculty")
+    ta = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="course_ta")
 
     def __str__(self):
         return f"{self.course_id} - {self.course_name}"
@@ -65,7 +75,7 @@ class Enrollment(models.Model):
 class Textbook(models.Model):
     textbook_id = models.PositiveIntegerField(primary_key=True)
     title = models.CharField(max_length=100)
-    course = models.ForeignKey(Course, on_delete=models.RESTRICT, null=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.title
@@ -148,7 +158,7 @@ class Question(models.Model):
 class Activity(models.Model):
     activity_id = models.AutoField(primary_key=True)
     question = models.ForeignKey(Question, on_delete=models.SET_NULL, blank=True, null=True)
-    hidden = models.BooleanField()
+    hidden = models.BooleanField(default=False)
 
 
 class Notification(models.Model):
