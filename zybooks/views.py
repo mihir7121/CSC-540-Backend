@@ -811,7 +811,7 @@ def landing(request):
 # Courses APIs
 # ===========================
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin'])
 @require_http_methods(["POST"])
 def create_courses(request):
     try:
@@ -856,6 +856,7 @@ def create_courses(request):
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
+
 
 @csrf_exempt
 @role_required(['admin', 'faculty'])
@@ -907,3 +908,39 @@ def delete_course(request, course_id):
     
     except Course.DoesNotExist:
         return JsonResponse({"detail": "Course not found"}, status=404)
+
+# ===========================
+# ADD TA
+# ===========================  
+@csrf_exempt
+# @role_required(['faculty'])
+@require_http_methods(["POST"])
+def create_ta(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        first_name = data.get('username')
+        last_name = data.get('password')
+        email_id = data.get('email')
+        default_password = data.get('password')
+        course_id = data.get('course_id')
+        username = request.COOKIES.get('username')
+        faculty_id = User.objects.get(username=username).user_id
+        user = User.objects.filter(first_name=first_name, last_name=last_name,email=email_id).first()
+        if user:
+            return JsonResponse({"error": "TA Already Exists"}, status=400)
+        else:
+            # Create and save a new TA instance
+            new_user = User(first_name=first_name, last_name=last_name, email=email_id, password=default_password)
+            new_user.save()
+            # faculty_id = request.COOKIES.get('user_id')
+            try:
+                course_selected = Course.objects.get(course_id=course_id)
+            except Course.DoesNotExist:
+                return JsonResponse({'error': 'Course ID does not exist'}, status=404)
+            course_selected.ta = new_user
+            course_selected.save()
+            ta = TA(ta_username = new_user,faculty_id=User.objects.get(user_id=faculty_id))
+            ta.save()
+            return JsonResponse({"success": "TA created successfully"}, status=201)
+
+    return JsonResponse({"error": "Only POST method is allowed"}, status=405)

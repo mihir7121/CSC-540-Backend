@@ -39,5 +39,6 @@ urlpatterns = [
     path('courses/', views.get_all_courses, name='get-all-courses'),       # GET all courses
     path('courses/<int:course_id>/', views.get_course_by_id, name='get-course-by-id'),  # GET a course by ID
     path('courses/<int:course_id>/delete/', views.delete_course, name='delete-course'),  # DELETE a course by ID
-    path('courses/create/', views.create_courses, name='create-course')      # POST create a new course
+    path('courses/create/', views.create_courses, name='create-course'),      # POST create a new course
+    path('createta/',views.create_ta,name='create-ta') # create TA
 ]
