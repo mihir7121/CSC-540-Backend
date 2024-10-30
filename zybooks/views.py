@@ -552,7 +552,6 @@ def content_text(request, content_id):
             return JsonResponse({"detail": str(e)}, status=500)
     return JsonResponse({"detail": "Only POST request allowed"}, status=500)
     
-
 @csrf_exempt
 @role_required(['admin', 'faculty'])
 def content_image(request, content_id):
@@ -576,6 +575,90 @@ def content_image(request, content_id):
             return JsonResponse({"detail": str(e)}, status=500)
     return JsonResponse({"detail": "Only POST request allowed"}, status=500)
 
+# ===========================
+# Activity APIs
+# ===========================
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+@require_http_methods(["POST"])
+def create_activity(request):
+    try:
+        data = json.loads(request.body)
+        activity_id = data.get("activity_id")
+        activity = Activity.objects.create(activity_id=activity_id)
+        return JsonResponse({
+            "activity_id": activity.activity_id
+        }, status=201)
+    
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def read_activities(request):
+    try:
+        # Fetch all activities
+        activities = Activity.objects.all().values("activity_id", "question_id")
+        return JsonResponse(list(activities), safe=False, status=200)
+    
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET", "PUT", "DELETE"])
+@role_required(['admin', 'faculty'])
+def activity(request, activity_id):
+    try:
+        if request.method == "GET":
+            try:
+                activity = Activity.objects.get(activity_id=activity_id)
+                data = {
+                    "activity_id": activity.activity_id,
+                    "question_id": activity.question.question_id
+                }
+                return JsonResponse(data, status=200)
+            
+            except Activity.DoesNotExist:
+                return JsonResponse({"detail": "Activity with this ID does not exist"}, status=404)
+        
+        elif request.method == "PUT":
+            try:
+                activity = Activity.objects.get(activity_id=activity_id)
+                data = json.loads(request.body)
+                
+                # Update the question if provided and exists
+                question_id = data.get("question_id")
+                if question_id:
+                    try:
+                        question = Question.objects.get(question_id=question_id)
+                        activity.question = question
+                    except Question.DoesNotExist:
+                        return JsonResponse({"detail": "Question with this ID does not exist"}, status=400)
+                
+                activity.save()
+                return JsonResponse({
+                    "activity_id": activity.activity_id,
+                    "question_id": activity.question.question_id
+                }, status=200)
+            
+            except Activity.DoesNotExist:
+                return JsonResponse({"detail": "Activity with this ID does not exist"}, status=404)
+        
+        elif request.method == "DELETE":
+            try:
+                activity = Activity.objects.get(activity_id=activity_id)
+                activity.delete()
+                return JsonResponse({"detail": "Activity deleted successfully"}, status=200)
+            
+            except Activity.DoesNotExist:
+                return JsonResponse({"detail": "Activity with this ID does not exist"}, status=404)
+        
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+# ===========================
+# Question APIs
+# ===========================
 @role_required(['admin'])        
 def landing(request):
     now = datetime.datetime.now()

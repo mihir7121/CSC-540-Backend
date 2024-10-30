@@ -119,6 +119,39 @@ class Content(models.Model):
 
         super().save(*args, **kwargs)
 
+class Question(models.Model):
+    question_id = models.AutoField(primary_key=True)
+    question_text = models.TextField()
+    
+    # Option 1 fields
+    option_1_text = models.CharField(max_length=255)
+    option_1_explanation = models.TextField(blank=True, null=True)
+    option_1_label = models.BooleanField()  # True for correct, False for incorrect
+    
+    # Option 2 fields
+    option_2_text = models.CharField(max_length=255)
+    option_2_explanation = models.TextField(blank=True, null=True)
+    option_2_label = models.BooleanField()
+    
+    # Option 3 fields
+    option_3_text = models.CharField(max_length=255)
+    option_3_explanation = models.TextField(blank=True, null=True)
+    option_3_label = models.BooleanField()
+    
+    # Option 4 fields
+    option_4_text = models.CharField(max_length=255)
+    option_4_explanation = models.TextField(blank=True, null=True)
+    option_4_label = models.BooleanField()
+
+    def __str__(self):
+        return f"Question {self.question_id}: {self.question_text}"
+
+
+class Activity(models.Model):
+    activity_id = models.AutoField(primary_key=True)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, blank=True)
+
+
 class Notification(models.Model):
     notification_id = models.AutoField(primary_key=True)
     message = models.CharField(max_length=500)
