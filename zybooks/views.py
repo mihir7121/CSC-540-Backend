@@ -585,9 +585,13 @@ def create_activity(request):
     try:
         data = json.loads(request.body)
         activity_id = data.get("activity_id")
-        activity = Activity.objects.create(activity_id=activity_id)
+        try:
+            activity = Activity.objects.create(activity_id=activity_id)
+        except:
+            return JsonResponse({"detail": "Activity with the given ID already exists"}, status=500)    
         return JsonResponse({
-            "activity_id": activity.activity_id
+            "activity_id": activity.activity_id,
+            "question_id": activity.question.question_id if activity.question else None
         }, status=201)
     
     except Exception as e:
@@ -597,7 +601,6 @@ def create_activity(request):
 @require_http_methods(["GET"])
 def read_activity(request):
     try:
-        # Fetch all activities
         activities = Activity.objects.all().values("activity_id", "question_id")
         return JsonResponse(list(activities), safe=False, status=200)
     
@@ -614,7 +617,7 @@ def activity(request, activity_id):
                 activity = Activity.objects.get(activity_id=activity_id)
                 data = {
                     "activity_id": activity.activity_id,
-                    "question_id": activity.question.question_id
+                    "question_id": activity.question.question_id if activity.question else None
                 }
                 return JsonResponse(data, status=200)
             
@@ -659,6 +662,139 @@ def activity(request, activity_id):
 # ===========================
 # Question APIs
 # ===========================
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+@require_http_methods(["POST"])
+def create_question(request):
+    try:
+        data = json.loads(request.body)
+
+        if not data.get("activity_id"):
+            return JsonResponse({"detail": "Need Activity ID to create question"}, status=400)    
+        # Retrieve the associated activity by ID
+        activity_id = data.get("activity_id")
+        activity = Activity.objects.get(activity_id=activity_id)
+        
+        # Create and save the new question
+        question = Question.objects.create(
+            question_id=data.get("question_id"),
+            question_text=data.get("question_text"),
+            option_1_text=data.get("option_1_text"),
+            option_1_explanation=data.get("option_1_explanation"),
+            option_1_label=data.get("option_1_label"),
+            option_2_text=data.get("option_2_text"),
+            option_2_explanation=data.get("option_2_explanation"),
+            option_2_label=data.get("option_2_label"),
+            option_3_text=data.get("option_3_text"),
+            option_3_explanation=data.get("option_3_explanation"),
+            option_3_label=data.get("option_3_label"),
+            option_4_text=data.get("option_4_text"),
+            option_4_explanation=data.get("option_4_explanation"),
+            option_4_label=data.get("option_4_label"),
+        )
+        
+        # Associate the question with the activity
+        activity.question = question
+        activity.save()
+
+        return JsonResponse({
+            "question_id": question.question_id,
+            "question_text": question.question_text,
+            "activity_id": activity.activity_id
+        }, status=201)
+    
+    except Activity.DoesNotExist:
+        return JsonResponse({"detail": "Activity with this ID does not exist"}, status=400)
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def read_questions(request):
+    try:
+        questions = Question.objects.all().values(
+            "question_id", "question_text",
+            "option_1_text", "option_1_explanation", "option_1_label",
+            "option_2_text", "option_2_explanation", "option_2_label",
+            "option_3_text", "option_3_explanation", "option_3_label",
+            "option_4_text", "option_4_explanation", "option_4_label"
+        )
+        return JsonResponse(list(questions), safe=False, status=200)
+    
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+    
+
+@csrf_exempt
+@require_http_methods(["GET", "PUT", "DELETE"])
+@role_required(['admin', 'faculty'])
+def question(request, question_id):
+    try:
+        # Retrieve specific question by ID
+        if request.method == "GET":
+            try:
+                question = Question.objects.get(question_id=question_id)
+                data = {
+                    "question_id": question.question_id,
+                    "question_text": question.question_text,
+                    "option_1_text": question.option_1_text,
+                    "option_1_explanation": question.option_1_explanation,
+                    "option_1_label": question.option_1_label,
+                    "option_2_text": question.option_2_text,
+                    "option_2_explanation": question.option_2_explanation,
+                    "option_2_label": question.option_2_label,
+                    "option_3_text": question.option_3_text,
+                    "option_3_explanation": question.option_3_explanation,
+                    "option_3_label": question.option_3_label,
+                    "option_4_text": question.option_4_text,
+                    "option_4_explanation": question.option_4_explanation,
+                    "option_4_label": question.option_4_label
+                }
+                return JsonResponse(data, status=200)
+            
+            except Question.DoesNotExist:
+                return JsonResponse({"detail": "Question with this ID does not exist"}, status=404)
+
+        elif request.method == "PUT":
+            try:
+                question = Question.objects.get(question_id=question_id)
+                data = json.loads(request.body)
+
+                # Update fields
+                question.question_text = data.get("question_text", question.question_text)
+                question.option_1_text = data.get("option_1_text", question.option_1_text)
+                question.option_1_explanation = data.get("option_1_explanation", question.option_1_explanation)
+                question.option_1_label = data.get("option_1_label", question.option_1_label)
+                question.option_2_text = data.get("option_2_text", question.option_2_text)
+                question.option_2_explanation = data.get("option_2_explanation", question.option_2_explanation)
+                question.option_2_label = data.get("option_2_label", question.option_2_label)
+                question.option_3_text = data.get("option_3_text", question.option_3_text)
+                question.option_3_explanation = data.get("option_3_explanation", question.option_3_explanation)
+                question.option_3_label = data.get("option_3_label", question.option_3_label)
+                question.option_4_text = data.get("option_4_text", question.option_4_text)
+                question.option_4_explanation = data.get("option_4_explanation", question.option_4_explanation)
+                question.option_4_label = data.get("option_4_label", question.option_4_label)
+
+                # Save the updated question
+                question.save()
+                return JsonResponse({"detail": "Question updated successfully"}, status=200)
+            
+            except Question.DoesNotExist:
+                return JsonResponse({"detail": "Question with this ID does not exist"}, status=404)
+
+        # Delete specific question by ID
+        elif request.method == "DELETE":
+            try:
+                question = Question.objects.get(question_id=question_id)
+                question.delete()
+                return JsonResponse({"detail": "Question deleted successfully"}, status=200)
+            
+            except Question.DoesNotExist:
+                return JsonResponse({"detail": "Question with this ID does not exist"}, status=404)
+    
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+    
 @role_required(['admin'])        
 def landing(request):
     now = datetime.datetime.now()

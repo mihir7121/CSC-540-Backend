@@ -120,7 +120,7 @@ class Content(models.Model):
         super().save(*args, **kwargs)
 
 class Question(models.Model):
-    question_id = models.AutoField(primary_key=True)
+    question_id = models.BigIntegerField(primary_key=True)
     question_text = models.TextField()
     
     # Option 1 fields
@@ -149,7 +149,7 @@ class Question(models.Model):
 
 class Activity(models.Model):
     activity_id = models.AutoField(primary_key=True)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, blank=True)
+    question = models.ForeignKey(Question, on_delete=models.SET_NULL, blank=True, null=True)
 
 
 class Notification(models.Model):

@@ -31,6 +31,10 @@ urlpatterns = [
     path('activities/', views.create_activity, name='create_activity'),
     path('activities/all/', views.read_activity, name='create_activity'),
     path('activities/<int:activity_id>/', views.activity, name='activity'),
+
+    path('questions/', views.create_question, name='create_question'),
+    path('questions/all/', views.read_questions, name='create_question'),
+    path('questions/<int:question_id>/', views.question, name='question'),
     
     path('courses/', views.get_all_courses, name='get-all-courses'),       # GET all courses
     path('courses/<int:course_id>/', views.get_course_by_id, name='get-course-by-id'),  # GET a course by ID
