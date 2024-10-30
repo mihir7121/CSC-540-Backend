@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 
 # Create your models here.
+
 class User(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
@@ -46,7 +47,7 @@ class Course(models.Model):
         ('evaluation', 'Evaluation'),
     ]
     # Primary fields for Course details
-    course_id = models.AutoField(primary_key=True)  # Unique identifier for the course
+    course_id = models.CharField(max_length=50,primary_key=True)  # Unique identifier for the course
     course_token = models.CharField(max_length=7, unique=True)
     course_name = models.CharField(max_length=100)  # Name of the course
     start_date = models.DateField(default=timezone.now)
@@ -58,6 +59,7 @@ class Course(models.Model):
 
     def __str__(self):
         return f"{self.course_id} - {self.course_name}"
+
 
 class Enrollment(models.Model):
     ENROLLMENT_CHOICES = [
@@ -93,7 +95,6 @@ class Section(models.Model):
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
     textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
     hidden = models.BooleanField()
-
     class Meta:
         unique_together = ('chapter', 'textbook', 'number')
 
@@ -154,11 +155,10 @@ class Question(models.Model):
     def __str__(self):
         return f"Question {self.question_id}: {self.question_text}"
 
-
 class Activity(models.Model):
     activity_id = models.AutoField(primary_key=True)
     question = models.ForeignKey(Question, on_delete=models.SET_NULL, blank=True, null=True)
-    hidden = models.BooleanField(default=False)
+    hidden = models.BooleanField()
 
 
 class Notification(models.Model):

@@ -880,6 +880,7 @@ def create_course(request):
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
 
+
 @csrf_exempt
 @require_http_methods(["GET"])
 def read_courses(request):
