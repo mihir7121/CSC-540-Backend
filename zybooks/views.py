@@ -586,12 +586,13 @@ def create_activity(request):
         data = json.loads(request.body)
         activity_id = data.get("activity_id")
         try:
-            activity = Activity.objects.create(activity_id=activity_id)
+            activity = Activity.objects.create(activity_id=activity_id, hidden=data.get("hidden"))
         except:
             return JsonResponse({"detail": "Activity with the given ID already exists"}, status=500)    
         return JsonResponse({
             "activity_id": activity.activity_id,
-            "question_id": activity.question.question_id if activity.question else None
+            "question_id": activity.question.question_id if activity.question else None,
+            "hidden": activity.hidden
         }, status=201)
     
     except Exception as e:
@@ -601,7 +602,7 @@ def create_activity(request):
 @require_http_methods(["GET"])
 def read_activity(request):
     try:
-        activities = Activity.objects.all().values("activity_id", "question_id")
+        activities = Activity.objects.all().values("activity_id", "question_id", "hidden")
         return JsonResponse(list(activities), safe=False, status=200)
     
     except Exception as e:
@@ -617,7 +618,9 @@ def activity(request, activity_id):
                 activity = Activity.objects.get(activity_id=activity_id)
                 data = {
                     "activity_id": activity.activity_id,
-                    "question_id": activity.question.question_id if activity.question else None
+                    "question_id": activity.question.question_id if activity.question else None,
+                    "hidden": activity.hidden
+
                 }
                 return JsonResponse(data, status=200)
             
@@ -630,6 +633,7 @@ def activity(request, activity_id):
                 data = json.loads(request.body)
                 
                 # Update the question if provided and exists
+                activity.hidden = data.get("hidden", activity.hidden)
                 question_id = data.get("question_id")
                 if question_id:
                     try:
@@ -641,7 +645,8 @@ def activity(request, activity_id):
                 activity.save()
                 return JsonResponse({
                     "activity_id": activity.activity_id,
-                    "question_id": activity.question.question_id
+                    "question_id": activity.question.question_id,
+                    "hidden": activity.hidden
                 }, status=200)
             
             except Activity.DoesNotExist:
@@ -663,7 +668,7 @@ def activity(request, activity_id):
 # Question APIs
 # ===========================
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty', 'ta'])
 @require_http_methods(["POST"])
 def create_question(request):
     try:

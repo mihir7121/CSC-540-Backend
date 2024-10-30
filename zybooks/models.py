@@ -19,7 +19,7 @@ class User(models.Model):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
     
     creation_date = models.DateTimeField(default=timezone.now, null = False)
-
+    
     def save(self, *args, **kwargs):
         if not self.user_id:  # Generate user_id only if it hasn't been set
             month = self.creation_date.strftime("%m")  # Get month in 2 digits
@@ -44,10 +44,7 @@ class Course(models.Model):
     end_date = models.DateField(blank=True, null=True)
     course_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     course_capacity = models.PositiveIntegerField() 
-
-    # textbook = models.ForeignKey('Textbook', on_delete=models.SET_NULL, blank=True, null=True)  # Textbook used in the course
-    # faculty = models.ForeignKey('Faculty', on_delete=models.CASCADE)  # Faculty teaching the course
-    # ta = models.ForeignKey('TA', on_delete=models.SET_NULL, blank=True, null=True)  # Teaching Assistant for the course
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"{self.course_id} - {self.course_name}"
@@ -64,6 +61,7 @@ class Enrollment(models.Model):
     class Meta:
         unique_together = ('student', 'course')
 
+
 class Textbook(models.Model):
     textbook_id = models.PositiveIntegerField(primary_key=True)
     title = models.CharField(max_length=100)
@@ -71,7 +69,7 @@ class Textbook(models.Model):
 
     def __str__(self):
         return self.title
-    
+
 class Chapter(models.Model):
     chapter_id = models.PositiveIntegerField(primary_key=True)
     title = models.CharField(max_length=100)
@@ -150,6 +148,7 @@ class Question(models.Model):
 class Activity(models.Model):
     activity_id = models.AutoField(primary_key=True)
     question = models.ForeignKey(Question, on_delete=models.SET_NULL, blank=True, null=True)
+    hidden = models.BooleanField()
 
 
 class Notification(models.Model):
