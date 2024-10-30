@@ -583,3 +583,103 @@ def landing(request):
     return HttpResponse(html)
 
     
+# ===========================
+# Courses APIs
+# ===========================
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+@require_http_methods(["POST"])
+def create_courses(request):
+    try:
+        data = json.loads(request.body)
+        course_token = data.get("course_token")
+        course_name = data.get("course_name")
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+        course_type = data.get("course_type")
+        course_capacity = data.get("course_capacity")
+
+        # Validate required fields
+        if not course_token or not course_name or not course_type or not course_capacity:
+            return JsonResponse({"detail": "Missing required fields"}, status=400)
+
+        # Check if the course with the given token already exists
+        if Course.objects.filter(course_token=course_token).exists():
+            return JsonResponse({"detail": "Course with this token already exists"}, status=400)
+
+        # Create the course
+        course = Course(
+            course_token=course_token,
+            course_name=course_name,
+            start_date=start_date,
+            end_date=end_date,
+            course_type=course_type,
+            course_capacity=course_capacity
+        )
+        course.save()
+
+        return JsonResponse({
+            "course_id": course.course_id,
+            "course_token": course.course_token,
+            "course_name": course.course_name,
+            "start_date": course.start_date,
+            "end_date": course.end_date,
+            "course_type": course.course_type,
+            "course_capacity": course.course_capacity
+        }, status=201)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"detail": "Invalid JSON"}, status=400)
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+@require_http_methods(["GET"])
+def get_all_courses(request):
+    courses = Course.objects.all()
+    course_data = [
+        {
+            "course_id": course.course_id,
+            "course_token": course.course_token,
+            "course_name": course.course_name,
+            "start_date": course.start_date,
+            "end_date": course.end_date,
+            "course_type": course.course_type,
+            "course_capacity": course.course_capacity
+        }
+        for course in courses
+    ]
+    return JsonResponse(course_data, safe=False, status=200)
+
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+@require_http_methods(["GET"])
+def get_course_by_id(request, course_id):
+    try:
+        course = Course.objects.get(course_id=course_id)
+        course_data = {
+            "course_id": course.course_id,
+            "course_token": course.course_token,
+            "course_name": course.course_name,
+            "start_date": course.start_date,
+            "end_date": course.end_date,
+            "course_type": course.course_type,
+            "course_capacity": course.course_capacity
+        }
+        return JsonResponse(course_data, status=200)
+    
+    except Course.DoesNotExist:
+        return JsonResponse({"detail": "Course not found"}, status=404)
+
+@csrf_exempt
+@role_required(['admin'])
+@require_http_methods(["DELETE"])
+def delete_course(request, course_id):
+    try:
+        course = Course.objects.get(course_id=course_id)
+        course.delete()
+        return JsonResponse({"detail": "Course deleted successfully"}, status=204)
+    
+    except Course.DoesNotExist:
+        return JsonResponse({"detail": "Course not found"}, status=404)

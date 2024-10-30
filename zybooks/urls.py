@@ -25,6 +25,11 @@ urlpatterns = [
     path('contents/all/', views.read_content, name='create_content'),
     path('contents/<int:content_id>/', views.content, name='content'),
     path('contents/<int:content_id>/text/', views.content_text, name='content_text'),
-    path('contents/<int:content_id>/image/', views.content_image, name='content_image')
-
+    path('contents/<int:content_id>/image/', views.content_image, name='content_image'),
+    path('courses/',views.create_courses,name='create_courses'),
+    
+    path('courses/', views.get_all_courses, name='get-all-courses'),       # GET all courses
+    path('courses/<int:course_id>/', views.get_course_by_id, name='get-course-by-id'),  # GET a course by ID
+    path('courses/<int:course_id>/delete/', views.delete_course, name='delete-course'),  # DELETE a course by ID
+    path('courses/create/', views.create_courses, name='create-course')      # POST create a new course
 ]
