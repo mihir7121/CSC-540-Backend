@@ -595,7 +595,7 @@ def create_activity(request):
 
 @csrf_exempt
 @require_http_methods(["GET"])
-def read_activities(request):
+def read_activity(request):
     try:
         # Fetch all activities
         activities = Activity.objects.all().values("activity_id", "question_id")
