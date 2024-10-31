@@ -1,0 +1,17 @@
+[
+    {
+        "textbook_id": 101,
+        "title": "Database Management Systems",
+        "course_id": "NCSUOganCSC440F24"  
+    },
+    {
+        "textbook_id": 102,
+        "title": "Fundamentals of Software Engineering",
+        "course_id": "NCSUSaraCSC326F24"
+    },
+    {
+        "textbook_id": 103,
+        "title": "Fundamentals of Machine Learning",
+        "course_id": "NCSUJegiCSC522F24"
+    }
+]

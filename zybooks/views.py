@@ -20,11 +20,10 @@ def login(request):
         data = json.loads(request.body)
         username = data.get('username')
         password = data.get('password')
-
         user = User.objects.filter(username=username).first()
         if user:
-            # Verify password            
-            if check_password(password, user.password):
+            # Verify password           
+            if check_password(password, user.password) or verify_password(user.password,password):
                 response = JsonResponse({"message": "success"})
                 # Set cookie with username and role
                 response.set_cookie('username', user.username)
