@@ -274,7 +274,7 @@ def read_chapter(request):
         return JsonResponse({"detail": str(e)}, status=500)
 
 @csrf_exempt
-@role_required(['admin', 'faculty'])  
+@role_required(['admin', 'faculty','ta'])  
 @require_http_methods(["GET", "PUT", "DELETE"])
 def chapter(request, chapter_id):
     if request.method == "GET":
@@ -332,7 +332,7 @@ def chapter(request, chapter_id):
 # SECTION APIs
 # ===========================
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 @require_http_methods(["POST"])
 def create_section(request):
     try:
@@ -529,7 +529,7 @@ def content(request, content_id):
         return JsonResponse({"detail": str(e)}, status=500)
 
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 def content_text(request, content_id):
     if request.method == "POST":
         try:
@@ -553,7 +553,7 @@ def content_text(request, content_id):
     return JsonResponse({"detail": "Only POST request allowed"}, status=500)
     
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 def content_image(request, content_id):
     if request.method == "POST":
         try:
@@ -579,7 +579,7 @@ def content_image(request, content_id):
 # Activity APIs
 # ===========================
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 @require_http_methods(["POST"])
 def create_activity(request):
     try:
@@ -610,7 +610,7 @@ def read_activity(request):
 
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 def activity(request, activity_id):
     try:
         if request.method == "GET":
@@ -732,7 +732,7 @@ def read_questions(request):
 
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 def question(request, question_id):
     try:
         # Retrieve specific question by ID
