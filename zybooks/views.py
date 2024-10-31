@@ -7,7 +7,7 @@ from django.http import HttpResponse
 import datetime
 import json
 from django.http import JsonResponse
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import check_password, make_password, verify_password
 from .models import User
 from .decorators import role_required
 from django.views.decorators.csrf import csrf_exempt
@@ -20,11 +20,10 @@ def login(request):
         data = json.loads(request.body)
         username = data.get('username')
         password = data.get('password')
-
         user = User.objects.filter(username=username).first()
         if user:
-            # Verify password            
-            if check_password(password, user.password):
+            # Verify password           
+            if check_password(password, user.password) or verify_password(user.password,password):
                 response = JsonResponse({"message": "success"})
                 # Set cookie with username and role
                 response.set_cookie('username', user.username)
@@ -274,7 +273,7 @@ def read_chapter(request):
         return JsonResponse({"detail": str(e)}, status=500)
 
 @csrf_exempt
-@role_required(['admin', 'faculty'])  
+@role_required(['admin', 'faculty','ta'])  
 @require_http_methods(["GET", "PUT", "DELETE"])
 def chapter(request, chapter_id):
     if request.method == "GET":
@@ -332,7 +331,7 @@ def chapter(request, chapter_id):
 # SECTION APIs
 # ===========================
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 @require_http_methods(["POST"])
 def create_section(request):
     try:
@@ -529,7 +528,7 @@ def content(request, content_id):
         return JsonResponse({"detail": str(e)}, status=500)
 
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 def content_text(request, content_id):
     if request.method == "POST":
         try:
@@ -553,7 +552,7 @@ def content_text(request, content_id):
     return JsonResponse({"detail": "Only POST request allowed"}, status=500)
     
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 def content_image(request, content_id):
     if request.method == "POST":
         try:
@@ -579,7 +578,7 @@ def content_image(request, content_id):
 # Activity APIs
 # ===========================
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 @require_http_methods(["POST"])
 def create_activity(request):
     try:
@@ -610,7 +609,7 @@ def read_activity(request):
 
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 def activity(request, activity_id):
     try:
         if request.method == "GET":
@@ -732,7 +731,7 @@ def read_questions(request):
 
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty','ta'])
 def question(request, question_id):
     try:
         # Retrieve specific question by ID
@@ -1062,3 +1061,122 @@ def course_students(request, course_id):
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
+@require_http_methods(["GET"])
+def get_course_by_id(request, course_id):
+    try:
+        course = Course.objects.get(course_id=course_id)
+        course_data = {
+            "course_id": course.course_id,
+            "course_token": course.course_token,
+            "course_name": course.course_name,
+            "start_date": course.start_date,
+            "end_date": course.end_date,
+            "course_type": course.course_type,
+            "course_capacity": course.course_capacity
+        }
+        return JsonResponse(course_data, status=200)
+    
+    except Course.DoesNotExist:
+        return JsonResponse({"detail": "Course not found"}, status=404)
+
+@csrf_exempt
+@role_required(['admin'])
+@require_http_methods(["DELETE"])
+def delete_course(request, course_id):
+    try:
+        course = Course.objects.get(course_id=course_id)
+        course.delete()
+        return JsonResponse({"detail": "Course deleted successfully"}, status=204)
+    
+    except Course.DoesNotExist:
+        return JsonResponse({"detail": "Course not found"}, status=404)
+
+# ===========================
+# ADD TA
+# ===========================  
+@csrf_exempt
+@role_required(['faculty'])
+@require_http_methods(["POST"])
+def create_ta(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        first_name = data.get('username')
+        last_name = data.get('password')
+        email_id = data.get('email')
+        default_password = data.get('password')
+        course_id = data.get('course_id')
+        username = request.COOKIES.get('username')
+        faculty_id = User.objects.get(username=username).user_id
+        user = User.objects.filter(first_name=first_name, last_name=last_name,email=email_id).first()
+        if user:
+            return JsonResponse({"error": "TA Already Exists"}, status=400)
+        else:
+            # Create and save a new TA instance
+            new_user = User(first_name=first_name, last_name=last_name, email=email_id, password=default_password)
+            new_user.save()
+            # faculty_id = request.COOKIES.get('user_id')
+            try:
+                course_selected = Course.objects.get(course_id=course_id)
+            except Course.DoesNotExist:
+                return JsonResponse({'error': 'Course ID does not exist'}, status=404)
+            course_selected.ta = new_user
+            course_selected.save()
+            ta = TA(ta_username = new_user,faculty_id=User.objects.get(user_id=faculty_id))
+            ta.save()
+            return JsonResponse({"success": "TA created successfully"}, status=201)
+
+    return JsonResponse({"error": "Only POST method is allowed"}, status=405)
+
+# ================
+# Change Password
+# ================
+@csrf_exempt
+@require_http_methods(["POST"])
+def change_password(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError as e:
+            return JsonResponse({'error': 'Invalid JSON: ' + str(e)}, status=400)
+
+        old_password = data.get("old_password")
+        new_password = data.get("new_password")
+        username = request.COOKIES.get('username')
+
+        # Fetch the user by username
+        user = User.objects.filter(username=username).first()
+        if user.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+
+        # Check if the old password is correct
+        if not verify_password(old_password, user.password):
+            return JsonResponse({'error': 'Wrong Old Password'}, status=403)
+
+        # Update the password
+        user.password = make_password(new_password)  # Hash the new password
+        user.save()
+        return JsonResponse({'success': 'Password Changed'}, status=200)
+
+    return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
+
+# =============
+# TA API's
+# =============
+@csrf_exempt
+@require_http_methods(["GET"])
+# @role_required(['ta'])
+def all_students(request):
+    if request.method == "GET":
+        try:
+            # Attempt to get all users with the role 'student'
+            all_students = User.objects.filter(role='student')
+            # Check if any students exist
+            if not all_students.exists():
+                return JsonResponse({"error": "No students found."}, status=404)
+            # Convert QuerySet to a list of dictionaries for JSON serialization
+            students_list = list(all_students.values('user_id', 'first_name', 'last_name', 'username', 'email'))
+            return JsonResponse({"students": students_list}, status=200)
+        except Exception as e:
+            # Handle any unexpected exceptions
+            return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
+    return JsonResponse({"error": "Only GET method is allowed"}, status=405)

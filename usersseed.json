@@ -1,0 +1,244 @@
+[
+    {
+        "model": "zybooks.user",
+        "pk": "JaWi1024",
+        "fields": {
+            "first_name": "James",
+            "last_name": "Williams",
+            "username": "jwilliams",
+            "email": "jwilliams@ncsu.edu",
+            "password": "jwilliams@1234",
+            "role": "ta"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "LiAl0924",
+        "fields": {
+            "first_name": "Lisa",
+            "last_name": "Alberti",
+            "username": "lalberti",
+            "email": "lalberti@ncsu.edu",
+            "password": "lalberti&5678@",
+            "role": "ta"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "DaJo1024",
+        "fields": {
+            "first_name": "David",
+            "last_name": "Johnson",
+            "username": "djohnson",
+            "email": "djohnson@ncsu.edu",
+            "password": "djohnson%@1122",
+            "role": "ta"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "ElCl1024",
+        "fields": {
+            "first_name": "Ellie",
+            "last_name": "Clark",
+            "username": "eclark",
+            "email": "eclark@ncsu.edu",
+            "password": "eclark^#3654",
+            "role": "ta"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "JeGi0924",
+        "fields": {
+            "first_name": "Jeff",
+            "last_name": "Gibson",
+            "username": "jgibson",
+            "email": "jgibson@ncsu.edu",
+            "password": "jgibson$#9877",
+            "role": "ta"
+        }
+    },
+
+    {
+        "model": "zybooks.user",
+        "pk": "KeOg1024",
+        "fields": {
+            "first_name": "Kemafor",
+            "last_name": "Ogan",
+            "username": "kogan",
+            "email": "kogan@ncsu.edu",
+            "password": "Ko2024!rpc",
+            "role": "faculty"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "JoDo1024",
+        "fields": {
+            "first_name": "John",
+            "last_name": "Doe",
+            "username": "john.doe",
+            "email": "john.doe@example.com",
+            "password": "Jd2024!abc",
+            "role": "faculty"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "SaMi1024",
+        "fields": {
+            "first_name": "Sarah",
+            "last_name": "Miller",
+            "username": "sarah.miller",
+            "email": "sarah.miller@domain.com",
+            "password": "Sm#Secure2024",
+            "role": "faculty"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "DaBr1024",
+        "fields": {
+            "first_name": "David",
+            "last_name": "Brown",
+            "username": "david.b",
+            "email": "david.b@webmail.com",
+            "password": "DbPass123!",
+            "role": "faculty"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "EmDa1024",
+        "fields": {
+            "first_name": "Emily",
+            "last_name": "Davis",
+            "username": "emily.davis",
+            "email": "emily.davis@email.com",
+            "password": "Emily#2024!",
+            "role": "faculty"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "MiWi1024",
+        "fields": {
+            "first_name": "Michael",
+            "last_name": "Wilson",
+            "username": "michael.w",
+            "email": "michael.w@service.com",
+            "password": "Mw987secure",
+            "role": "faculty"
+        }
+    },
+
+    {
+        "model": "zybooks.user",
+        "pk": "ErPe1024",
+        "fields": {
+            "first_name": "Eric",
+            "last_name": "Perrig",
+            "username": "eperrig",
+            "email": "ez356@example.mail",
+            "password": "qwdmq",
+            "role": "student"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "AlAr1024",
+        "fields": {
+            "first_name": "Alice",
+            "last_name": "Artho",
+            "username": "aartho",
+            "email": "aa23@edu.mail",
+            "password": "omdsws",
+            "role": "student"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "BoTe1024",
+        "fields": {
+            "first_name": "Bob",
+            "last_name": "Temple",
+            "username": "btemple",
+            "email": "bt163@template.mail",
+            "password": "sak+=",
+            "role": "student"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "LiGa1024",
+        "fields": {
+            "first_name": "Lily",
+            "last_name": "Gaddy",
+            "username": "lgaddy",
+            "email": "li123@example.edu",
+            "password": "cnaos",
+            "role": "student"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "ArMo1024",
+        "fields": {
+            "first_name": "Aria",
+            "last_name": "Morrow",
+            "username": "amorrow",
+            "email": "am213@example.edu",
+            "password": "jwocals",
+            "role": "student"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "KeRh1014",
+        "fields": {
+            "first_name": "Kellan",
+            "last_name": "Rhodes",
+            "username": "krhodes",
+            "email": "kr21@example.edu",
+            "password": "camome",
+            "role": "student"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "SiHa1024",
+        "fields": {
+            "first_name": "Sienna",
+            "last_name": "Hayes",
+            "username": "shayes",
+            "email": "sh13@example.edu",
+            "password": "asdqm",
+            "role": "student"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "FiWi1024",
+        "fields": {
+            "first_name": "Finn",
+            "last_name": "Wilder",
+            "username": "fwilder",
+            "email": "fw23@example.edu",
+            "password": "f13mas",
+            "role": "student"
+        }
+    },
+    {
+        "model": "zybooks.user",
+        "pk": "LeMe1024",
+        "fields": {
+            "first_name": "Leona",
+            "last_name": "Mercer",
+            "username": "lmercer",
+            "email": "lm56@example.edu",
+            "password": "ca32",
+            "role": "student"
+        }
+    }
+]

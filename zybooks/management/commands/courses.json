@@ -1,0 +1,60 @@
+[
+    {
+        "course_id": "NCSUOganCSC440F24",
+        "course_name": "CSC440 Database Systems",
+        "course_token": "XYJKLM",
+        "course_type": "active",
+        "course_capacity": 60,
+        "faculty": "KeOg1024",
+        "ta": "JaWi1024",
+        "start_date": "2024-08-15",
+        "end_date": "2024-12-15"
+    },
+    {
+        "course_id": "NCSUOganCSC540F24",
+        "course_name": "CSC540 Database Systems",
+        "course_token": "STUKZT",
+        "course_type": "active",
+        "course_capacity": 50,
+        "faculty": "KeOg1024",
+        "ta": "LiAl0924",
+        "start_date": "2024-08-17",
+        "end_date": "2024-12-15"
+    },
+    {
+        "course_id": "NCSUSaraCSC326F24",
+        "course_name": "CSC326 Software Engineering",
+        "course_token": "LRUFND",
+        "course_type": "active",
+        "course_capacity": 100,
+        "faculty": "SaMi1024",
+        "ta": "DaJo1024",
+        "start_date": "2024-08-23",
+        "end_date": "2024-10-23"
+    },
+    {
+        "course_id": "NCSUJegiCSC522F24",
+        "course_name": "CSC522 Fundamentals of Machine Learning",
+        "course_token": null,
+        "course_type": "evaluation",
+        "course_capacity": null,
+        "faculty": "JoDo1024",
+        "ta": null,
+        "start_date": "2025-08-25",
+        "end_date": "2025-12-18"
+    },
+
+    {
+        "course_id": "NCSUSaraCSC326F25",
+        "course_name": "CSC326 Software Engineering",
+        "course_token": null,
+        "course_type": "evaluation",
+        "course_capacity": null,
+        "faculty": "SaMi1024",
+        "ta": null,
+        "start_date": "2025-08-27",
+        "end_date": "2025-12-19"
+    }
+]
+
+

@@ -35,7 +35,7 @@ class User(models.Model):
 class TA(models.Model):
     ta = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ta_name', null=True)
     associated_faculty = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='tas')
-    hourly_pay = models.DecimalField(max_digits=5, decimal_places=2, blank=True)
+    hourly_pay = models.DecimalField(max_digits=5, decimal_places=2, blank=True,default=0.00)
     hours_per_week = models.PositiveIntegerField(blank=True, null=True)
 
     def __str__(self):
@@ -48,12 +48,12 @@ class Course(models.Model):
     ]
     # Primary fields for Course details
     course_id = models.CharField(max_length=50,primary_key=True)  # Unique identifier for the course
-    course_token = models.CharField(max_length=7, unique=True)
+    course_token = models.CharField(max_length=7, null=True)
     course_name = models.CharField(max_length=100)  # Name of the course
     start_date = models.DateField(default=timezone.now)
     end_date = models.DateField(blank=True, null=True)
     course_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
-    course_capacity = models.PositiveIntegerField() 
+    course_capacity = models.PositiveIntegerField(null=True) 
     faculty = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="course_faculty")
     ta = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="course_ta")
 
@@ -73,7 +73,6 @@ class Enrollment(models.Model):
     class Meta:
         unique_together = ('student', 'course')
 
-
 class Textbook(models.Model):
     textbook_id = models.PositiveIntegerField(primary_key=True)
     title = models.CharField(max_length=100)
@@ -83,20 +82,28 @@ class Textbook(models.Model):
         return self.title
 
 class Chapter(models.Model):
-    chapter_id = models.PositiveIntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True,default=0)  # Auto-increment field
+    chapter_id = models.CharField(max_length=7)
     title = models.CharField(max_length=100)
     textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
     hidden = models.BooleanField()
 
+    def __str__(self):
+        return f"{self.title} (ID: {self.chapter_id})"
+
 class Section(models.Model):
-    section_id = models.FloatField(primary_key=True)
+    section_id = models.AutoField(primary_key=True)  # Change to AutoField
     number = models.CharField(max_length=10)
     title = models.CharField(max_length=100)
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
     textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
     hidden = models.BooleanField()
+
     class Meta:
-        unique_together = ('chapter', 'textbook', 'number')
+        unique_together = ('chapter', 'textbook', 'number')  # Ensure the uniqueness of the combination
+
+    def __str__(self):
+        return f"{self.title} (Section {self.number})"
 
 class Content(models.Model):
     BLOCK_TYPE_CHOICES = [

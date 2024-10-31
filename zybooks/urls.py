@@ -35,11 +35,15 @@ urlpatterns = [
     path('questions/all/', views.read_questions, name='create_question'),
     path('questions/<int:question_id>/', views.question, name='question'),
 
-    path('courses/', views.create_course, name='create_course'),
-    path('courses/all/', views.read_courses, name='read_courses'),
-    path('courses/<int:course_id>/', views.course, name='course'),
+    path('courses/', views.read_courses, name='get-all-courses'),      
+    path('courses/<int:course_id>/', views.get_course_by_id, name='get-course-by-id'),  
+    path('courses/<int:course_id>/delete/', views.delete_course, name='delete-course'),  
+    path('courses/create/', views.create_course, name='create-course'),
     path('courses/<int:course_id>/enroll/', views.enroll_in_course, name='enroll_in_course'), #course enrollment
     path('courses/<int:course_id>/worklist/', views.course_worklist, name='course_worklist'), #view worklist
-    path('courses/<int:course_id>/students/', views.course_students, name='course_students') #view enrolled students
-
+    path('courses/<int:course_id>/students/', views.course_students, name='course_students'), #view enrolled students      
+    
+    path('createta/',views.create_ta,name='create-ta'), # create TA
+    path('changepassword/',views.change_password,name="change-password"),
+    path('students/all/',views.all_students,name="all-students")
 ]
