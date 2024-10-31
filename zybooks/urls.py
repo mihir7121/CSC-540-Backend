@@ -38,5 +38,8 @@ urlpatterns = [
     path('courses/', views.create_course, name='create_course'),
     path('courses/all/', views.read_courses, name='read_courses'),
     path('courses/<int:course_id>/', views.course, name='course'),
-    
+    path('courses/<int:course_id>/enroll/', views.enroll_in_course, name='enroll_in_course'), #course enrollment
+    path('courses/<int:course_id>/worklist/', views.course_worklist, name='course_worklist'), #view worklist
+    path('courses/<int:course_id>/students/', views.course_students, name='course_students') #view enrolled students
+
 ]

@@ -949,3 +949,116 @@ def course(request, course_id):
             return JsonResponse({"detail": "Course not found"}, status=404)
         except Exception as e:
             return JsonResponse({"detail": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def enroll_in_course(request, course_id):
+    try:
+        
+        user_id = request.COOKIES.get('username') 
+
+        if not user_id:
+            return JsonResponse({"detail": "Missing required fields"}, status=400)
+
+        try:
+            student = User.objects.get(username=user_id, role='student')
+        except User.DoesNotExist:
+            return JsonResponse({"detail": "Student not found or invalid role"}, status=404)
+
+        try:
+            course = Course.objects.get(course_id=course_id)
+        except Course.DoesNotExist:
+            return JsonResponse({"detail": "Course not found"}, status=404)
+
+        if Enrollment.objects.filter(student=student, course=course).exists():
+            return JsonResponse({"detail": "Student is already enrolled in this course"}, status=400)
+
+        enrollment = Enrollment(student=student, course=course, status='pending')
+        enrollment.save()
+
+        return JsonResponse({
+            "message": "Enrollment successful",
+            "student_id": student.user_id,
+            "course_id": course.course_id,
+            "status": enrollment.status
+        }, status=201)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"detail": "Invalid JSON"}, status=400)
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+@csrf_exempt
+@role_required(['faculty'])
+@require_http_methods(["GET"])
+def course_worklist(request, course_id):
+    try:
+        faculty_username = request.COOKIES.get('username')  # Assuming 'username' refers to faculty's username
+        if not faculty_username:
+            return JsonResponse({"detail": "Missing faculty identifier in cookies"}, status=400)
+
+        try:
+            faculty = User.objects.get(username=faculty_username, role='faculty')
+        except User.DoesNotExist:
+            return JsonResponse({"detail": "Faculty not found or invalid role"}, status=404)
+        try:
+            course = Course.objects.get(course_id=course_id, faculty=faculty)  
+        except Course.DoesNotExist:
+            return JsonResponse({"detail": "Course not found for the specified faculty"}, status=404)
+
+        pending_enrollments = Enrollment.objects.filter(course=course, status="pending")
+
+        pending_students = [
+            {
+                "student_id": enrollment.student.user_id,
+                "student_name": f"{enrollment.student.first_name} {enrollment.student.last_name}",
+                "status": enrollment.status
+            }
+            for enrollment in pending_enrollments
+        ]
+
+        return JsonResponse({"pending_students": pending_students}, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"detail": "Invalid JSON"}, status=400)
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+
+@csrf_exempt
+@role_required(['admin', 'faculty'])
+@require_http_methods(["GET"])
+def course_students(request, course_id):
+    try:
+        faculty_username = request.COOKIES.get('username')  
+        if not faculty_username:
+            return JsonResponse({"detail": "Missing faculty identifier in cookies"}, status=400)
+
+        try:
+            faculty = User.objects.get(username=faculty_username, role='faculty')
+        except User.DoesNotExist:
+            return JsonResponse({"detail": "Faculty not found or invalid role"}, status=404)
+
+        try:
+            course = Course.objects.get(course_id=course_id, faculty=faculty)  
+        except Course.DoesNotExist:
+            return JsonResponse({"detail": "Course not found for the specified faculty"}, status=404)
+
+        enrolled_students = Enrollment.objects.filter(course=course, status="enrolled")
+
+        enrolled_students = [
+            {
+                "student_id": enrollment.student.user_id,
+                "student_name": f"{enrollment.student.first_name} {enrollment.student.last_name}",
+                "status": enrollment.status
+            }
+            for enrollment in enrolled_students
+        ]
+
+        return JsonResponse({"enrolled_students": enrolled_students}, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"detail": "Invalid JSON"}, status=400)
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
