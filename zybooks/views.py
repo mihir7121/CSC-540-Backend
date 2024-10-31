@@ -1061,6 +1061,58 @@ def course_students(request, course_id):
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["PUT"])
+def update_enrollment_status(request, course_id):
+    try:
+        data = json.loads(request.body)
+        student_id = data.get('student-id')
+        if not student_id:
+            return JsonResponse({"detail": "Missing required fields"}, status=400)
+
+        faculty_username = request.COOKIES.get('username') 
+        if not faculty_username:
+            return JsonResponse({"detail": "Missing faculty identifier in cookies"}, status=400)
+
+        try:
+            faculty = User.objects.get(username=faculty_username, role='faculty')
+        except User.DoesNotExist:
+            return JsonResponse({"detail": "Faculty not found or invalid role"}, status=404)
+
+        try:
+            course = Course.objects.get(course_id=course_id, faculty=faculty) 
+        except Course.DoesNotExist:
+            return JsonResponse({"detail": "Course not found for the specified faculty"}, status=404)
+
+        try:
+            student = User.objects.get(username=student_id, role='student')
+            enrollment = Enrollment.objects.get(student=student, course=course, status="pending")
+        except User.DoesNotExist:
+            return JsonResponse({"detail": "Student not found or invalid role"}, status=404)
+        except Enrollment.DoesNotExist:
+            return JsonResponse({"detail": "Pending enrollment not found for the specified student and course"}, status=404)
+
+        enrolled_count = Enrollment.objects.filter(course=course, status="enrolled").count()
+        if enrolled_count >= course.course_capacity:
+            return JsonResponse({"detail": "Course capacity has been reached"}, status=400)
+
+        enrollment.status = "enrolled"
+        enrollment.save()
+
+        return JsonResponse({
+            "message": "Enrollment status updated to enrolled",
+            "student_id": student.user_id,
+            "course_id": course.course_id,
+            "status": enrollment.status
+        }, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"detail": "Invalid JSON"}, status=400)
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+
 @require_http_methods(["GET"])
 def get_course_by_id(request, course_id):
     try:
