@@ -35,7 +35,7 @@ class User(models.Model):
 class TA(models.Model):
     ta = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ta_name', null=True)
     associated_faculty = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='tas')
-    hourly_pay = models.DecimalField(max_digits=5, decimal_places=2, blank=True)
+    hourly_pay = models.DecimalField(max_digits=5, decimal_places=2, blank=True,default=0.00)
     hours_per_week = models.PositiveIntegerField(blank=True, null=True)
 
     def __str__(self):
@@ -60,12 +60,6 @@ class Course(models.Model):
     def __str__(self):
         return f"{self.course_id} - {self.course_name}"
 
-<<<<<<< HEAD
-class TA(models.Model):
-    ta_username = models.OneToOneField(User, on_delete=models.CASCADE, related_name="assigned_tas")
-    faculty_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="faculty_supervised_tas")
-=======
->>>>>>> e5cacefe0f64f0e885902679e3f211c263808732
 
 class Enrollment(models.Model):
     ENROLLMENT_CHOICES = [

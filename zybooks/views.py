@@ -1033,14 +1033,11 @@ def change_password(request):
 
         # Fetch the user by username
         user = User.objects.filter(username=username).first()
-        if user is None:
+        if user.DoesNotExist:
             return JsonResponse({'error': 'User not found'}, status=404)
 
-        print(make_password(old_password))
-        print(user.password)
         # Check if the old password is correct
         if not verify_password(old_password, user.password):
-
             return JsonResponse({'error': 'Wrong Old Password'}, status=403)
 
         # Update the password
@@ -1050,6 +1047,24 @@ def change_password(request):
 
     return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
 
-
-
-    
+# =============
+# TA API's
+# =============
+@csrf_exempt
+@require_http_methods(["GET"])
+# @role_required(['ta'])
+def all_students(request):
+    if request.method == "GET":
+        try:
+            # Attempt to get all users with the role 'student'
+            all_students = User.objects.filter(role='student')
+            # Check if any students exist
+            if not all_students.exists():
+                return JsonResponse({"error": "No students found."}, status=404)
+            # Convert QuerySet to a list of dictionaries for JSON serialization
+            students_list = list(all_students.values('user_id', 'first_name', 'last_name', 'username', 'email'))
+            return JsonResponse({"students": students_list}, status=200)
+        except Exception as e:
+            # Handle any unexpected exceptions
+            return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
+    return JsonResponse({"error": "Only GET method is allowed"}, status=405)

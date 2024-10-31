@@ -39,13 +39,11 @@ urlpatterns = [
     path('courses/all/', views.read_courses, name='read_courses'),
     path('courses/<int:course_id>/', views.course, name='course'),
     
-<<<<<<< HEAD
-    path('courses/', views.get_all_courses, name='get-all-courses'),       # GET all courses
-    path('courses/<int:course_id>/', views.get_course_by_id, name='get-course-by-id'),  # GET a course by ID
-    path('courses/<int:course_id>/delete/', views.delete_course, name='delete-course'),  # DELETE a course by ID
-    path('courses/create/', views.create_courses, name='create-course'),      # POST create a new course
+    path('courses/', views.read_courses, name='get-all-courses'),      
+    path('courses/<int:course_id>/', views.get_course_by_id, name='get-course-by-id'),  
+    path('courses/<int:course_id>/delete/', views.delete_course, name='delete-course'),  
+    path('courses/create/', views.create_course, name='create-course'),      
     path('createta/',views.create_ta,name='create-ta'), # create TA
-    path('changepassword/',views.change_password,name="change-password") # change password
-=======
->>>>>>> e5cacefe0f64f0e885902679e3f211c263808732
+    path('changepassword/',views.change_password,name="change-password"),
+    path('students/all/',views.all_students,name="all-students")
 ]
