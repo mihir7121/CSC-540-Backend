@@ -728,7 +728,6 @@ def read_questions(request):
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
     
-
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
 @role_required(['admin', 'faculty','ta'])

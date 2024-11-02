@@ -92,7 +92,7 @@ class Chapter(models.Model):
         return f"{self.title} (ID: {self.chapter_id})"
 
 class Section(models.Model):
-    section_id = models.AutoField(primary_key=True)  # Change to AutoField
+    section_id = models.AutoField(primary_key=True)
     number = models.CharField(max_length=10)
     title = models.CharField(max_length=100)
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
@@ -111,7 +111,7 @@ class Content(models.Model):
         ('image', 'Image'),
     ]
 
-    content_id = models.IntegerField(primary_key=True)
+    content_id = models.CharField(max_length=10, primary_key=True)
     block_type = models.CharField(max_length=5, choices=BLOCK_TYPE_CHOICES, blank=True)
     text_data = models.TextField(blank=True, null=True)  # Field for text content
     image_data = models.ImageField(upload_to='images/', blank=True, null=True)
