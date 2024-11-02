@@ -23,9 +23,9 @@ urlpatterns = [
 
     path('contents/', views.create_content, name='create_content'),
     path('contents/all/', views.read_content, name='create_content'),
-    path('contents/<int:content_id>/', views.content, name='content'),
-    path('contents/<int:content_id>/text/', views.content_text, name='content_text'),
-    path('contents/<int:content_id>/image/', views.content_image, name='content_image'),
+    path('contents/<str:content_id>/', views.content, name='content'),
+    path('contents/<str:content_id>/text/', views.content_text, name='content_text'),
+    path('contents/<str:content_id>/image/', views.content_image, name='content_image'),
     
     path('activities/', views.create_activity, name='create_activity'),
     path('activities/all/', views.read_activity, name='create_activity'),
