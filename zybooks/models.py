@@ -163,7 +163,8 @@ class Question(models.Model):
         return f"Question {self.question_id}: {self.question_text}"
 
 class Activity(models.Model):
-    activity_id = models.AutoField(primary_key=True)
+    activity_id = models.CharField(max_length=20, primary_key=True)
+    content = models.ForeignKey(Content, on_delete=models.CASCADE, null=True, blank=True)
     question = models.ForeignKey(Question, on_delete=models.SET_NULL, blank=True, null=True)
     hidden = models.BooleanField()
 
