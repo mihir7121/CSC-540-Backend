@@ -19,6 +19,7 @@ urlpatterns = [
     path('sections/', views.create_section, name='create_section'),
     path('sections/all/', views.read_section, name='create_section'),
     path('sections/<str:number>/', views.section, name='section'),
+    path('sections/detail',views.get_section_details,name='get-section-details'),
 
     path('contents/', views.create_content, name='create_content'),
     path('contents/all/', views.read_content, name='create_content'),

@@ -1217,3 +1217,50 @@ def all_students(request):
 # Student API's 
 ## ================
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def get_section_details(request):
+    try:
+        # Attempt to parse JSON body
+        body = json.loads(request.body)
+        chapter_id = body.get('chapter_id')
+        section_number = body.get('section_number')
+        textbook_id = body.get('textbook_id')
+
+        # Check for missing fields
+        if chapter_id is None or section_number is None:
+            return JsonResponse({"detail": "Missing required fields"}, status=400)
+
+        # Fetch chapter from the database
+        try:
+            chapter = Chapter.objects.get(chapter_id=chapter_id,textbook_id=textbook_id)
+        except Chapter.DoesNotExist:
+            return JsonResponse({"detail": "Chapter not found"}, status=404)
+        # Fetch section from the database
+        try:
+            print(chapter.chapter_id)
+            section = Section.objects.get(number=section_number,chapter=chapter,textbook=textbook_id)
+        except Section.DoesNotExist:
+            return JsonResponse({"detail": "Section not found"}, status=404)
+
+        # Prepare the section data to return
+        section_data = {
+            "section_id": section.section_id,
+            "number": section.number,
+            "title": section.title,
+            "chapter_id": chapter.chapter_id,
+            "textbook_id": section.textbook.textbook_id,  # Assuming you want the textbook ID
+            "hidden": section.hidden,
+            "chapter_title": chapter.title  # Include the chapter title if needed
+        }
+
+        # Respond with the section data
+        return JsonResponse({
+            "message": "Details retrieved successfully",
+            "section": section_data
+        }, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"detail": "Invalid JSON"}, status=400)
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
