@@ -331,7 +331,6 @@ def read_section(request):
 @require_http_methods(["GET", "PUT", "DELETE"])
 def section(request, number):
     data = json.loads(request.body)
-    
     try:
         textbook = Textbook.objects.get(textbook_id=data.get("textbook_id"))
         chapter = Chapter.objects.get(chapter_id=data.get("chapter_id"), textbook=textbook)
@@ -1183,7 +1182,6 @@ def all_students(request):
             # Handle any unexpected exceptions
             return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
     return JsonResponse({"error": "Only GET method is allowed"}, status=405)
-
 
 ## ================
 # Student API's 
