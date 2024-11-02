@@ -48,7 +48,7 @@ class Course(models.Model):
     ]
     # Primary fields for Course details
     course_id = models.CharField(max_length=50,primary_key=True)  # Unique identifier for the course
-    course_token = models.CharField(max_length=7, null=True)
+    course_token = models.CharField(max_length=7, unique=True, null=True)
     course_name = models.CharField(max_length=100)  # Name of the course
     start_date = models.DateField(default=timezone.now)
     end_date = models.DateField(blank=True, null=True)
@@ -73,11 +73,13 @@ class Enrollment(models.Model):
     class Meta:
         unique_together = ('student', 'course')
 
+    def __str__(self):
+        return f"{self.student.first_name}-{self.student.last_name}-{self.course.course_id}-{self.status}"
+
 class Textbook(models.Model):
     textbook_id = models.PositiveIntegerField(primary_key=True)
     title = models.CharField(max_length=100)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True)
-
     def __str__(self):
         return self.title
 
@@ -95,14 +97,14 @@ class Chapter(models.Model):
 
 class Section(models.Model):
     section_id = models.AutoField(primary_key=True)
-    number = models.CharField(max_length=10)
+    number = models.CharField(max_length=20)
     title = models.CharField(max_length=100)
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
     textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
     hidden = models.BooleanField()
 
     class Meta:
-        unique_together = ('chapter', 'textbook', 'number')  # Ensure the uniqueness of the combination
+        unique_together = ('chapter', 'textbook', 'number')
 
     def __str__(self):
         return f"{self.title} (Section {self.number})"
@@ -111,15 +113,14 @@ class Content(models.Model):
     BLOCK_TYPE_CHOICES = [
         ('text', 'Text'),
         ('image', 'Image'),
+        ('activity', 'Activity'),
     ]
 
     content_id = models.CharField(max_length=10, primary_key=True)
-    block_type = models.CharField(max_length=5, choices=BLOCK_TYPE_CHOICES, blank=True)
+    block_type = models.CharField(max_length=10, choices=BLOCK_TYPE_CHOICES, blank=True)
     text_data = models.TextField(blank=True, null=True)  # Field for text content
     image_data = models.ImageField(upload_to='images/', blank=True, null=True)
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
-    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
-    textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
     hidden = models.BooleanField(blank=True)
 
     class Meta:
@@ -172,9 +173,14 @@ class Activity(models.Model):
     question = models.ForeignKey(Question, on_delete=models.SET_NULL, blank=True, null=True)
     hidden = models.BooleanField()
 
-
 class Notification(models.Model):
     notification_id = models.AutoField(primary_key=True)
     message = models.CharField(max_length=500)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     read_status = models.BooleanField()
+
+# class Student(models.Model):
+#     user_id = models.ForeignKey(User,on_delete=models.CASCADE)
+#     registered_couser_id = models.ForeignKey(Course,on_delete=models.CASCADE)
+#     total_participation_points = models.PositiveBigIntegerField(default=0)
+#     finished_activites = models.PositiveBigIntegerField(default=0)

@@ -7,7 +7,6 @@ urlpatterns = [
     path('signup/', views.signup, name="logout"),
     path('login/', views.login, name="login"),
     path('logout/', views.logout, name="logout"),
-    path('add_section/', views.add_section, name="addSection"),
     
     path('textbooks/', views.create_textbook, name='create_textbook'),
     path('textbooks/all/', views.read_textbooks, name='read_textbooks'),
@@ -19,7 +18,7 @@ urlpatterns = [
 
     path('sections/', views.create_section, name='create_section'),
     path('sections/all/', views.read_section, name='create_section'),
-    path('sections/<str:section_id>/', views.section, name='section'),
+    path('sections/<str:number>/', views.section, name='section'),
 
     path('contents/', views.create_content, name='create_content'),
     path('contents/all/', views.read_content, name='create_content'),
@@ -36,10 +35,10 @@ urlpatterns = [
     path('questions/<int:question_id>/', views.question, name='question'),
 
     path('courses/', views.create_course, name='create_course'),      
-    path('courses/<int:course_id>/', views.read_courses, name='read_courses'),  
+    path('courses/all/', views.read_courses, name='read_courses'),  
     path('courses/<int:course_id>/', views.course, name='course'),  
     
-    path('courses/<int:course_id>/enroll/', views.enroll_in_course, name='enroll_in_course'), #course enrollment
+    path('courses/enroll/', views.enroll_in_course, name='enroll_in_course'), #course enrollment
     path('courses/<int:course_id>/worklist/', views.course_worklist, name='course_worklist'), #view worklist
     path('courses/<int:course_id>/students/', views.course_students, name='course_students'), #view enrolled students      
     path('courses/<int:course_id>/update-enrollment/', views.update_enrollment_status, name='update_enrollment_status'), #update enrollment

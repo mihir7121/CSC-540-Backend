@@ -82,66 +82,6 @@ def signup(request):
     else:
         return JsonResponse({"message": "Sign Up Today!"}, status=200)
 
-# Admin URLs
-@role_required(['admin', 'faculty'])
-def add_section(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        section_number = data.get('section_number')
-        section_title = data.get('section_title')
-        chapter_id = data.get('chapter_id')
-
-        # Validate required fields
-        if not all([section_number, section_title, chapter_id]):
-            return JsonResponse({"error": "All fields are required."}, status=400)
-        
-        try:
-            chapter = Chapter.objects.get(id=chapter_id)  # Fetch chapter
-        except Chapter.DoesNotExist:
-            return JsonResponse({"error": "Chapter not found."}, status=404)
-        
-        # Create the new section
-        new_section = Section(
-            section_id=Section.objects.count() + 1,  # Random for now
-            number=section_number,
-            title=section_title,
-            chapter=chapter,
-            hidden=False 
-        )
-        new_section.save()
-        return JsonResponse({"message": "Section added successfully!"}, status=201)
-    return JsonResponse({"error": "Only POST method is allowed."}, status=405)
-
-# @role_required(['admin'])
-# def get_chapter(request, chapter_id):
-    try:
-        chapter = Chapter.objects.get(chapter_id=chapter_id)
-        sections = Section.objects.filter(chapter=chapter)
-
-        chapter_data = {
-            "chapter_id": chapter.chapter_id,
-            "title": chapter.title,
-            "hidden": chapter.hidden,
-            "textbook": chapter.textbook.title,  # Assuming the Textbook model has a 'title' field
-            "sections": [
-                {
-                    "section_id": section.section_id,
-                    "number": section.number,
-                    "title": section.title,
-                    "hidden": section.hidden,
-                }
-                for section in sections
-            ]
-        }
-
-        return JsonResponse(chapter_data, status=200)  # Return chapter details with sections as JSON
-
-    except Chapter.DoesNotExist:
-        return JsonResponse({"error": "Chapter not found."}, status=404)
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)  # Handle unexpected errors
-
 # ===========================
 # TEXTBOOK APIs
 # ===========================
@@ -341,23 +281,22 @@ def create_section(request):
     try:
         data = json.loads(request.body)
         
-        # Check if the section already exists
-        if Section.objects.filter(section_id=data.get("section_id")).exists():
-            return JsonResponse({"detail": "Section with this ID already exists"}, status=400)
-        
         # Check if the referenced chapter exists
         chapter_id = data.get("chapter_id")
         textbook_id = data.get("textbook_id")
-        try:
-            chapter = Chapter.objects.get(chapter_id=chapter_id)
-            textbook = Textbook.objects.get(textbook_id=textbook_id)
-        except Chapter.DoesNotExist:
-            return JsonResponse({"detail": "Chapter with this ID does not exist"}, status=400)
         
+        try:
+            textbook = Textbook.objects.get(textbook_id=textbook_id)
+            chapter = Chapter.objects.get(chapter_id=chapter_id, textbook=textbook)
+        except Textbook.DoesNotExist or Chapter.DoesNotExist:
+            return JsonResponse({"detail": "Textbook/Chapter with this ID does not exist"}, status=400)
+        
+        # Check if the section already exists
+        if Section.objects.filter(number=data.get("number"), chapter=chapter, textbook=textbook).exists():
+            return JsonResponse({"detail": "Section with this ID already exists in the given chapter or textbook"}, status=400)
         
         # Create and save new section
         section = Section.objects.create(
-            section_id=data.get("section_id"),
             number=data.get("number"),
             title=data.get("title"),
             chapter=chapter,
@@ -365,7 +304,7 @@ def create_section(request):
             hidden=data.get("hidden", False)
         )
         return JsonResponse({
-            "section_id": section.section_id,
+            "section_id (wont be using)": section.section_id,
             "number": section.number,
             "title": section.title,
             "chapter_id": section.chapter.chapter_id,
@@ -381,7 +320,7 @@ def create_section(request):
 def read_section(request):
     try:
         # Fetch all sections if no ID is provided
-        sections = Section.objects.all().values("section_id", "number", "title", "chapter_id", "hidden")
+        sections = Section.objects.all().values("section_id", "number", "title", "chapter", "textbook_id", "hidden")
         return JsonResponse(list(sections), safe=False, status=200)
     
     except Exception as e:
@@ -390,17 +329,27 @@ def read_section(request):
 @csrf_exempt
 @role_required(['admin', 'faculty'])
 @require_http_methods(["GET", "PUT", "DELETE"])
-def section(request, section_id):
-    section_id = float(section_id)
+def section(request, number):
+    data = json.loads(request.body)
+    
+    try:
+        textbook = Textbook.objects.get(textbook_id=data.get("textbook_id"))
+        chapter = Chapter.objects.get(chapter_id=data.get("chapter_id"), textbook=textbook)
+    except Textbook.DoesNotExist or Chapter.DoesNotExist:
+        return JsonResponse({"detail": "This textbook/chapter does not exist"})
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
     if request.method == "GET":        
-        if section_id:
+        if number:
             try:
-                section = Section.objects.get(section_id=section_id)
+                section = Section.objects.get(number=number, chapter=chapter, textbook=textbook)
                 return JsonResponse({
                     "section_id": section.section_id,
                     "number": section.number,
                     "title": section.title,
                     "chapter_id": section.chapter.chapter_id,
+                    "textbook_id": section.textbook.textbook_id,
                     "hidden": section.hidden
                 }, status=200)
             except Section.DoesNotExist:
@@ -411,20 +360,19 @@ def section(request, section_id):
             data = json.loads(request.body)
             
             try:
-                section = Section.objects.get(section_id=section_id)
+                section = Section.objects.get(number=number, chapter=chapter, textbook=textbook)
             except Section.DoesNotExist:
                 return JsonResponse({"detail": "Section not found"}, status=404)
             
-            section.number = data.get("number", section.number)
             section.title = data.get("title", section.title)
             section.hidden = data.get("hidden", section.hidden)
             section.save()
             
             return JsonResponse({
-                "section_id": section.section_id,
                 "number": section.number,
                 "title": section.title,
                 "chapter_id": section.chapter.chapter_id,
+                "textbook_id": section.textbook.textbook_id,
                 "hidden": section.hidden
             }, status=200)
         
@@ -434,7 +382,7 @@ def section(request, section_id):
     elif request.method == "DELETE":
         try:
             try:
-                section = Section.objects.get(section_id=section_id)
+                section = Section.objects.get(number=number, chapter=chapter, textbook=textbook)
             except Section.DoesNotExist:
                 return JsonResponse({"detail": "Section not found"}, status=404)
             
@@ -455,7 +403,7 @@ def create_content(request):
         data = json.loads(request.body)
         
         # Validate required fields
-        required_fields = ["section_id", "chapter_id", "textbook_id", "content_id"]
+        required_fields = ["number", "chapter_id", "textbook_id", "content_id"]
         missing_fields = [field for field in required_fields if field not in data]
         
         if missing_fields:
@@ -972,26 +920,38 @@ def course(request, course_id):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def enroll_in_course(request, course_id):
+def enroll_in_course(request):
     try:
-        user_id = request.COOKIES.get('username') 
-
-        if not user_id:
-            return JsonResponse({"detail": "Missing required fields"}, status=400)
-
+        # Attempt to parse JSON body
+        body = json.loads(request.body)
+        first_name = body.get('first_name')
+        last_name = body.get('last_name')
+        email = body.get('email')
+        course_token = body.get('course_token')
+        
+        # Check for missing fields
+        if not all([first_name, last_name, email, course_token]):
+            return JsonResponse({"detail": "Please fill in all the fields"}, status=400)
+        
+        # Check if user exists
         try:
-            student = User.objects.get(username=user_id, role='student')
+            student = User.objects.get(first_name=first_name, last_name=last_name, email=email)
+            if not hasattr(student, 'role') or student.role != 'student':
+                return JsonResponse({"detail": "User is not a student or invalid role"}, status=403)
         except User.DoesNotExist:
-            return JsonResponse({"detail": "Student not found or invalid role"}, status=404)
+            return JsonResponse({"detail": "Invalid Creds: Student not found"}, status=404)
 
+        # Check if course exists
         try:
-            course = Course.objects.get(course_id=course_id)
+            course = Course.objects.get(course_token=course_token)
         except Course.DoesNotExist:
-            return JsonResponse({"detail": "Course not found"}, status=404)
+            return JsonResponse({"detail": "Invalid Course not found"}, status=404)
 
+        # Check if enrollment already exists
         if Enrollment.objects.filter(student=student, course=course).exists():
-            return JsonResponse({"detail": "Student is already enrolled in this course"}, status=400)
+            return JsonResponse({"detail": f"Student is already present in this course"}, status=400)
 
+        # Create enrollment
         enrollment = Enrollment(student=student, course=course, status='pending')
         enrollment.save()
 
@@ -1001,11 +961,14 @@ def enroll_in_course(request, course_id):
             "course_id": course.course_id,
             "status": enrollment.status
         }, status=201)
-
+    
     except json.JSONDecodeError:
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
+    except KeyError as e:
+        return JsonResponse({"detail": f"Missing key: {str(e)}"}, status=400)
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
+    
 
 @csrf_exempt
 @role_required(['faculty'])
@@ -1140,8 +1103,8 @@ def update_enrollment_status(request, course_id):
 def create_ta(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        first_name = data.get('username')
-        last_name = data.get('password')
+        first_name = data.get('firstname')
+        last_name = data.get('lastname')
         email_id = data.get('email')
         default_password = data.get('password')
         course_id = data.get('course_id')
@@ -1176,6 +1139,10 @@ def change_password(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            first_name = data.get('firstname')
+            last_name = data.get('lastname')
+            email_id = data.get('email')
+            course_token = data.get('courseToke')
         except json.JSONDecodeError as e:
             return JsonResponse({'error': 'Invalid JSON: ' + str(e)}, status=400)
 
@@ -1216,3 +1183,9 @@ def all_students(request):
             # Handle any unexpected exceptions
             return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
     return JsonResponse({"error": "Only GET method is allowed"}, status=405)
+
+
+## ================
+# Student API's 
+## ================
+
