@@ -233,16 +233,19 @@ def create_chapter(request):
     try:
         data = json.loads(request.body)
         
-        # Check if the chapter already exists
-        if Chapter.objects.filter(chapter_id=data.get("chapter_id")).exists():
-            return JsonResponse({"detail": "Chapter with this ID already exists"}, status=400)
-        
-        # Check if the referenced textbook exists
         textbook_id = data.get("textbook_id")
+        chapter_id = data.get("chapter_id")
+
+        # Check if the referenced textbook exists
         try:
             textbook = Textbook.objects.get(textbook_id=textbook_id)
         except Textbook.DoesNotExist:
             return JsonResponse({"detail": "Textbook with this ID does not exist"}, status=400)
+        
+        # Check if the chapter already exists in that textbook
+        if Chapter.objects.filter(chapter_id=chapter_id, textbook=textbook).exists():
+            return JsonResponse({"detail": "Chapter with this ID in this textbook already exists"}, status=400)
+        
         
         # Create and save new chapter
         chapter = Chapter.objects.create(
@@ -276,10 +279,13 @@ def read_chapter(request):
 @role_required(['admin', 'faculty','ta'])  
 @require_http_methods(["GET", "PUT", "DELETE"])
 def chapter(request, chapter_id):
+    data = json.loads(request.body)
+    textbook = Textbook.objects.get(textbook_id = data.get('textbook_id'))
+
     if request.method == "GET":
         if chapter_id:
             try:
-                chapter = Chapter.objects.get(chapter_id=chapter_id)
+                chapter = Chapter.objects.get(chapter_id=chapter_id, textbook=textbook)
                 return JsonResponse({
                     "chapter_id": chapter.chapter_id,
                     "title": chapter.title,
@@ -290,11 +296,9 @@ def chapter(request, chapter_id):
                 return JsonResponse({"detail": "Chapter not found"}, status=404)
     
     elif request.method == "PUT":
-        try:
-            data = json.loads(request.body)
-            
+        try:            
             try:
-                chapter = Chapter.objects.get(chapter_id=chapter_id)
+                chapter = Chapter.objects.get(chapter_id=chapter_id, textbook=textbook)
             except Chapter.DoesNotExist:
                 return JsonResponse({"detail": "Chapter not found"}, status=404)
             
@@ -315,7 +319,7 @@ def chapter(request, chapter_id):
     elif request.method == "DELETE":
         try:
             try:
-                chapter = Chapter.objects.get(chapter_id=chapter_id)
+                chapter = Chapter.objects.get(chapter_id=chapter_id, textbook=textbook)
             except Chapter.DoesNotExist:
                 return JsonResponse({"detail": "Chapter not found"}, status=404)
             
@@ -450,10 +454,22 @@ def create_content(request):
     try:
         data = json.loads(request.body)
         
-        # Check if the referenced section exists
-        section_id = float(data.get("section_id"))
+        # Validate required fields
+        required_fields = ["section_id", "chapter_id", "textbook_id", "content_id"]
+        missing_fields = [field for field in required_fields if field not in data]
+        
+        if missing_fields:
+            return JsonResponse(
+                {"detail": f"Missing required fields: {', '.join(missing_fields)}"}, 
+                status=400
+            )
+        
+        # Fetch Chapter and Textbook objects
+        chapter = Chapter.objects.get(chapter_id=data.get("chapter_id"))
+        textbook = Textbook.objects.get(textbook_id=data.get("textbook_id"))
+
         try:
-            section = Section.objects.get(section_id=section_id)
+            section = Section.objects.get(section_id=data.get("section_id"), chapter=chapter, textbook=textbook)
         except Section.DoesNotExist:
             return JsonResponse({"detail": "Section with this ID does not exist"}, status=400)
         
@@ -461,9 +477,13 @@ def create_content(request):
         content = Content.objects.create(
             content_id=data.get("content_id"),
             section=section,
+            chapter=chapter,
+            textbook=textbook,
             hidden=data.get("hidden", False)
         )
         return JsonResponse({
+            "textbook_id": content.textbook.textbook_id,
+            "chapter_id": content.chapter.id,
             "content_id": content.content_id,
             "section_id": content.section.section_id,
             "hidden": content.hidden
@@ -477,7 +497,7 @@ def create_content(request):
 def read_content(request):
     try:
         # Fetch all content blocks
-        contents = Content.objects.all().values("content_id", "block_type", "text_data", "image_data", "section_id", "hidden")
+        contents = Content.objects.all().values("content_id", "block_type", "text_data", "image_data", "section_id", "chapter_id", "textbook_id", "hidden")
         return JsonResponse(list(contents), safe=False, status=200)
     
     except Exception as e:
@@ -578,18 +598,21 @@ def content_image(request, content_id):
 # Activity APIs
 # ===========================
 @csrf_exempt
-@role_required(['admin', 'faculty','ta'])
+@role_required(['admin', 'faculty', 'ta'])
 @require_http_methods(["POST"])
 def create_activity(request):
     try:
         data = json.loads(request.body)
         activity_id = data.get("activity_id")
+        content_id = data.get("content_id")
         try:
-            activity = Activity.objects.create(activity_id=activity_id, hidden=data.get("hidden"))
+            content = Content.objects.get(content_id=content_id)
+            activity = Activity.objects.create(activity_id=activity_id, content=content, hidden=data.get("hidden"))
         except:
             return JsonResponse({"detail": "Activity with the given ID already exists"}, status=500)    
         return JsonResponse({
             "activity_id": activity.activity_id,
+            "content_id": activity.content.content_id,
             "question_id": activity.question.question_id if activity.question else None,
             "hidden": activity.hidden
         }, status=201)
@@ -946,7 +969,6 @@ def course(request, course_id):
             return JsonResponse({"detail": "Course not found"}, status=404)
         except Exception as e:
             return JsonResponse({"detail": str(e)}, status=500)
-
 
 @csrf_exempt
 @require_http_methods(["POST"])

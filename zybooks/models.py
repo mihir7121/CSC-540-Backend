@@ -82,7 +82,6 @@ class Textbook(models.Model):
         return self.title
 
 class Chapter(models.Model):
-    id = models.AutoField(primary_key=True,default=0)  # Auto-increment field
     chapter_id = models.CharField(max_length=7)
     title = models.CharField(max_length=100)
     textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
@@ -90,6 +89,9 @@ class Chapter(models.Model):
 
     def __str__(self):
         return f"{self.title} (ID: {self.chapter_id})"
+    
+    class Meta:
+        unique_together = ('textbook', 'chapter_id')
 
 class Section(models.Model):
     section_id = models.AutoField(primary_key=True)
@@ -116,6 +118,8 @@ class Content(models.Model):
     text_data = models.TextField(blank=True, null=True)  # Field for text content
     image_data = models.ImageField(upload_to='images/', blank=True, null=True)
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
+    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
+    textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
     hidden = models.BooleanField(blank=True)
 
     class Meta:
