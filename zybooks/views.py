@@ -920,26 +920,38 @@ def course(request, course_id):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def enroll_in_course(request, course_id):
+def enroll_in_course(request):
     try:
-        user_id = request.COOKIES.get('username') 
-
-        if not user_id:
-            return JsonResponse({"detail": "Missing required fields"}, status=400)
-
+        # Attempt to parse JSON body
+        body = json.loads(request.body)
+        first_name = body.get('first_name')
+        last_name = body.get('last_name')
+        email = body.get('email')
+        course_token = body.get('course_token')
+        
+        # Check for missing fields
+        if not all([first_name, last_name, email, course_token]):
+            return JsonResponse({"detail": "Please fill in all the fields"}, status=400)
+        
+        # Check if user exists
         try:
-            student = User.objects.get(username=user_id, role='student')
+            student = User.objects.get(first_name=first_name, last_name=last_name, email=email)
+            if not hasattr(student, 'role') or student.role != 'student':
+                return JsonResponse({"detail": "User is not a student or invalid role"}, status=403)
         except User.DoesNotExist:
-            return JsonResponse({"detail": "Student not found or invalid role"}, status=404)
+            return JsonResponse({"detail": "Invalid Creds: Student not found"}, status=404)
 
+        # Check if course exists
         try:
-            course = Course.objects.get(course_id=course_id)
+            course = Course.objects.get(course_token=course_token)
         except Course.DoesNotExist:
-            return JsonResponse({"detail": "Course not found"}, status=404)
+            return JsonResponse({"detail": "Invalid Course not found"}, status=404)
 
+        # Check if enrollment already exists
         if Enrollment.objects.filter(student=student, course=course).exists():
-            return JsonResponse({"detail": "Student is already enrolled in this course"}, status=400)
+            return JsonResponse({"detail": f"Student is already present in this course"}, status=400)
 
+        # Create enrollment
         enrollment = Enrollment(student=student, course=course, status='pending')
         enrollment.save()
 
@@ -949,11 +961,14 @@ def enroll_in_course(request, course_id):
             "course_id": course.course_id,
             "status": enrollment.status
         }, status=201)
-
+    
     except json.JSONDecodeError:
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
+    except KeyError as e:
+        return JsonResponse({"detail": f"Missing key: {str(e)}"}, status=400)
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
+    
 
 @csrf_exempt
 @role_required(['faculty'])
@@ -1088,8 +1103,8 @@ def update_enrollment_status(request, course_id):
 def create_ta(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        first_name = data.get('username')
-        last_name = data.get('password')
+        first_name = data.get('firstname')
+        last_name = data.get('lastname')
         email_id = data.get('email')
         default_password = data.get('password')
         course_id = data.get('course_id')
@@ -1124,6 +1139,10 @@ def change_password(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            first_name = data.get('firstname')
+            last_name = data.get('lastname')
+            email_id = data.get('email')
+            course_token = data.get('courseToke')
         except json.JSONDecodeError as e:
             return JsonResponse({'error': 'Invalid JSON: ' + str(e)}, status=400)
 
@@ -1164,3 +1183,9 @@ def all_students(request):
             # Handle any unexpected exceptions
             return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
     return JsonResponse({"error": "Only GET method is allowed"}, status=405)
+
+
+## ================
+# Student API's 
+## ================
+
