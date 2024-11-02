@@ -95,14 +95,14 @@ class Chapter(models.Model):
 
 class Section(models.Model):
     section_id = models.AutoField(primary_key=True)
-    number = models.CharField(max_length=10)
+    number = models.CharField(max_length=20)
     title = models.CharField(max_length=100)
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
     textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
     hidden = models.BooleanField()
 
     class Meta:
-        unique_together = ('chapter', 'textbook', 'number')  # Ensure the uniqueness of the combination
+        unique_together = ('chapter', 'textbook', 'number')
 
     def __str__(self):
         return f"{self.title} (Section {self.number})"
@@ -111,15 +111,14 @@ class Content(models.Model):
     BLOCK_TYPE_CHOICES = [
         ('text', 'Text'),
         ('image', 'Image'),
+        ('activity', 'Activity'),
     ]
 
     content_id = models.CharField(max_length=10, primary_key=True)
-    block_type = models.CharField(max_length=5, choices=BLOCK_TYPE_CHOICES, blank=True)
+    block_type = models.CharField(max_length=10, choices=BLOCK_TYPE_CHOICES, blank=True)
     text_data = models.TextField(blank=True, null=True)  # Field for text content
     image_data = models.ImageField(upload_to='images/', blank=True, null=True)
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
-    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
-    textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
     hidden = models.BooleanField(blank=True)
 
     class Meta:
@@ -171,7 +170,6 @@ class Activity(models.Model):
     content = models.ForeignKey(Content, on_delete=models.CASCADE, null=True, blank=True)
     question = models.ForeignKey(Question, on_delete=models.SET_NULL, blank=True, null=True)
     hidden = models.BooleanField()
-
 
 class Notification(models.Model):
     notification_id = models.AutoField(primary_key=True)
