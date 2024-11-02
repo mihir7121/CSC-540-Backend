@@ -7,7 +7,7 @@ from django.http import HttpResponse
 import datetime
 import json
 from django.http import JsonResponse
-from django.contrib.auth.hashers import check_password, make_password, verify_password
+from django.contrib.auth.hashers import check_password, make_password
 from .models import User
 from .decorators import role_required
 from django.views.decorators.csrf import csrf_exempt
@@ -23,7 +23,7 @@ def login(request):
         user = User.objects.filter(username=username).first()
         if user:
             # Verify password           
-            if check_password(password, user.password) or verify_password(user.password,password):
+            if check_password(password, user.password):
                 response = JsonResponse({"message": "success"})
                 # Set cookie with username and role
                 response.set_cookie('username', user.username)
@@ -879,7 +879,6 @@ def create_course(request):
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
 
-
 @csrf_exempt
 @require_http_methods(["GET"])
 def read_courses(request):
@@ -954,7 +953,6 @@ def course(request, course_id):
 @require_http_methods(["POST"])
 def enroll_in_course(request, course_id):
     try:
-        
         user_id = request.COOKIES.get('username') 
 
         if not user_id:
@@ -1061,35 +1059,6 @@ def course_students(request, course_id):
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
-@require_http_methods(["GET"])
-def get_course_by_id(request, course_id):
-    try:
-        course = Course.objects.get(course_id=course_id)
-        course_data = {
-            "course_id": course.course_id,
-            "course_token": course.course_token,
-            "course_name": course.course_name,
-            "start_date": course.start_date,
-            "end_date": course.end_date,
-            "course_type": course.course_type,
-            "course_capacity": course.course_capacity
-        }
-        return JsonResponse(course_data, status=200)
-    
-    except Course.DoesNotExist:
-        return JsonResponse({"detail": "Course not found"}, status=404)
-
-@csrf_exempt
-@role_required(['admin'])
-@require_http_methods(["DELETE"])
-def delete_course(request, course_id):
-    try:
-        course = Course.objects.get(course_id=course_id)
-        course.delete()
-        return JsonResponse({"detail": "Course deleted successfully"}, status=204)
-    
-    except Course.DoesNotExist:
-        return JsonResponse({"detail": "Course not found"}, status=404)
 
 # ===========================
 # ADD TA
@@ -1147,10 +1116,6 @@ def change_password(request):
         user = User.objects.filter(username=username).first()
         if user.DoesNotExist:
             return JsonResponse({'error': 'User not found'}, status=404)
-
-        # Check if the old password is correct
-        if not verify_password(old_password, user.password):
-            return JsonResponse({'error': 'Wrong Old Password'}, status=403)
 
         # Update the password
         user.password = make_password(new_password)  # Hash the new password
