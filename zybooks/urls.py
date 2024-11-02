@@ -42,6 +42,7 @@ urlpatterns = [
     path('courses/<int:course_id>/worklist/', views.course_worklist, name='course_worklist'), #view worklist
     path('courses/<int:course_id>/students/', views.course_students, name='course_students'), #view enrolled students      
     path('courses/<int:course_id>/update-enrollment/', views.update_enrollment_status, name='update_enrollment_status'), #update enrollment
+    path('notifications/', views.view_notifications, name='view_notifications'), 
     
     path('createta/',views.create_ta,name='create-ta'), # create TA
     path('changepassword/',views.change_password,name="change-password"),

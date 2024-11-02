@@ -174,10 +174,12 @@ class Activity(models.Model):
     hidden = models.BooleanField()
 
 class Notification(models.Model):
-    notification_id = models.AutoField(primary_key=True)
-    message = models.CharField(max_length=500)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    read_status = models.BooleanField()
+    message = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Notification for {self.user.user_id} - {self.message[:20]}"
 
 # class Student(models.Model):
 #     user_id = models.ForeignKey(User,on_delete=models.CASCADE)

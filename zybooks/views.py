@@ -1073,10 +1073,17 @@ def update_enrollment_status(request, course_id):
         except User.DoesNotExist:
             return JsonResponse({"detail": "Student not found or invalid role"}, status=404)
         except Enrollment.DoesNotExist:
-            return JsonResponse({"detail": "Pending enrollment not found for the specified student and course"}, status=404)
+            return JsonResponse({"detail": "Student already enrolled in course"}, status=404)
 
         enrolled_count = Enrollment.objects.filter(course=course, status="enrolled").count()
         if enrolled_count >= course.course_capacity:
+            pending_students = Enrollment.objects.filter(course=course, status="pending")
+            for pending_enrollment in pending_students:
+                Notification.objects.create(
+                    user=pending_enrollment.student,
+                    message=f"Enrollment in course '{course.course_name}' has reached capacity. You were not enrolled."
+                )
+            pending_students.delete()
             return JsonResponse({"detail": "Course capacity has been reached"}, status=400)
 
         enrollment.status = "enrolled"
@@ -1091,6 +1098,29 @@ def update_enrollment_status(request, course_id):
 
     except json.JSONDecodeError:
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def view_notifications(request):
+    try:
+        username = request.COOKIES.get('username')
+        if not username:
+            return JsonResponse({"detail": "Missing user identifier in cookies"}, status=400)
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return JsonResponse({"detail": "User not found"}, status=404)
+
+        notifications = Notification.objects.filter(user=user)
+        notifications_data = [{"message": n.message, "created_at": n.created_at} for n in notifications]
+        notifications.delete()
+
+        return JsonResponse({"notifications": notifications_data}, status=200)
+        
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
 
