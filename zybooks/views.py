@@ -1105,7 +1105,7 @@ def update_enrollment_status(request, course_id):
             return JsonResponse({"detail": "Course not found for the specified faculty"}, status=404)
 
         try:
-            student = User.objects.get(username=student_id, role='student')
+            student = User.objects.get(user_id=student_id, role='student')
             enrollment = Enrollment.objects.get(student=student, course=course, status="pending")
         except User.DoesNotExist:
             return JsonResponse({"detail": "Student not found or invalid role"}, status=404)
