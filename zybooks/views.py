@@ -17,15 +17,15 @@ from django.views.decorators.http import require_http_methods
 def login(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        username = data.get('username')
+        user_id = data.get('user_id')
         password = data.get('password')
-        user = User.objects.filter(username=username).first()
+        user = User.objects.filter(user_id=user_id).first()
         if user:
             # Verify password           
             if check_password(password, user.password):
-                response = JsonResponse({"message": "success"})
-                # Set cookie with username and role
-                response.set_cookie('username', user.username)
+                response = JsonResponse({"message": "success",})
+                # Set cookie with user_id and role
+                response.set_cookie('user_id', user.user_id)
                 response.set_cookie('role', user.role)
                 return response
             else:
@@ -37,7 +37,7 @@ def login(request):
 @csrf_exempt
 def logout(request):
     response = JsonResponse({"message": "Logged out successfully"})
-    response.delete_cookie('username')
+    response.delete_cookie('user_id')
     response.delete_cookie('role')
     return response
 
@@ -47,7 +47,6 @@ def signup(request):
     if request.method == 'POST':
         # Parse request body
         data = json.loads(request.body)
-        username = data.get('username')
         email = data.get('email')
         password = data.get('password')
         role = data.get('role')
@@ -55,11 +54,11 @@ def signup(request):
         last_name = data.get('last_name')
 
         # Basic validations
-        if not all([username, email, password, role, first_name, last_name]):
+        if not all([email, password, role, first_name, last_name]):
             return JsonResponse({"error": "All fields are required."}, status=400)
 
-        if User.objects.filter(username=username).exists():
-            return JsonResponse({"error": "Username already exists."}, status=400)
+        if User.objects.filter(email=email, first_name=first_name, last_name=last_name).exists():
+            return JsonResponse({"error": "User with this email already exists."}, status=400)
 
         if User.objects.filter(email=email).exists():
             return JsonResponse({"error": "Email already exists."}, status=400)
@@ -67,17 +66,16 @@ def signup(request):
         # Create and save the new user
         hashed_password = make_password(password)  # Hash the password
         new_user = User(
-            username=username,
             email=email,
             password=hashed_password,
             role=role,
             first_name=first_name,
             last_name=last_name
         )
-
         new_user.save()
-
-        return JsonResponse({"message": "User registered successfully!"}, status=201)
+        return JsonResponse({"message": "User registered successfully!",
+                             "user_id": new_user.user_id
+                             }, status=201)
     else:
         return JsonResponse({"message": "Sign Up Today!"}, status=200)
 
@@ -1052,12 +1050,12 @@ def enroll_in_course(request):
 @require_http_methods(["GET"])
 def course_worklist(request, course_id):
     try:
-        faculty_username = request.COOKIES.get('username')  # Assuming 'username' refers to faculty's username
-        if not faculty_username:
+        faculty_user_id = request.COOKIES.get('user_id')
+        if not faculty_user_id:
             return JsonResponse({"detail": "Missing faculty identifier in cookies"}, status=400)
 
         try:
-            faculty = User.objects.get(username=faculty_username, role='faculty')
+            faculty = User.objects.get(user_id=faculty_user_id, role='faculty')
         except User.DoesNotExist:
             return JsonResponse({"detail": "Faculty not found or invalid role"}, status=404)
         try:
@@ -1089,12 +1087,12 @@ def course_worklist(request, course_id):
 @require_http_methods(["GET"])
 def course_students(request, course_id):
     try:
-        faculty_username = request.COOKIES.get('username')  
-        if not faculty_username:
+        faculty_user_id = request.COOKIES.get('user_id')  
+        if not faculty_user_id:
             return JsonResponse({"detail": "Missing faculty identifier in cookies"}, status=400)
 
         try:
-            faculty = User.objects.get(username=faculty_username, role='faculty')
+            faculty = User.objects.get(user_id=faculty_user_id, role='faculty')
         except User.DoesNotExist:
             return JsonResponse({"detail": "Faculty not found or invalid role"}, status=404)
 
@@ -1130,12 +1128,12 @@ def update_enrollment_status(request, course_id):
         if not student_id:
             return JsonResponse({"detail": "Missing required fields"}, status=400)
 
-        faculty_username = request.COOKIES.get('username') 
-        if not faculty_username:
+        faculty_user_id = request.COOKIES.get('user_id') 
+        if not faculty_user_id:
             return JsonResponse({"detail": "Missing faculty identifier in cookies"}, status=400)
 
         try:
-            faculty = User.objects.get(username=faculty_username, role='faculty')
+            faculty = User.objects.get(user_id=faculty_user_id, role='faculty')
         except User.DoesNotExist:
             return JsonResponse({"detail": "Faculty not found or invalid role"}, status=404)
 
@@ -1183,12 +1181,12 @@ def update_enrollment_status(request, course_id):
 @require_http_methods(["GET"])
 def view_notifications(request):
     try:
-        username = request.COOKIES.get('username')
-        if not username:
+        user_id = request.COOKIES.get('user_id')
+        if not user_id:
             return JsonResponse({"detail": "Missing user identifier in cookies"}, status=400)
 
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(user_id=user_id)
         except User.DoesNotExist:
             return JsonResponse({"detail": "User not found"}, status=404)
 
@@ -1215,9 +1213,9 @@ def create_ta(request):
         email_id = data.get('email')
         default_password = data.get('password')
         course_id = data.get('course_id')
-        username = request.COOKIES.get('username')
-        faculty_id = User.objects.get(username=username).user_id
-        user = User.objects.filter(first_name=first_name, last_name=last_name,email=email_id).first()
+        user_id = request.COOKIES.get('user_id')
+        faculty_id = User.objects.get(user_id=user_id).user_id
+        user = User.objects.filter(first_name=first_name, last_name=last_name, email=email_id).first()
         if user:
             return JsonResponse({"error": "TA Already Exists"}, status=400)
         else:
@@ -1231,7 +1229,7 @@ def create_ta(request):
                 return JsonResponse({'error': 'Course ID does not exist'}, status=404)
             course_selected.ta = new_user
             course_selected.save()
-            ta = TA(ta_username = new_user,faculty_id=User.objects.get(user_id=faculty_id))
+            ta = TA(ta=new_user, faculty_id=User.objects.get(user_id=faculty_id))
             ta.save()
             return JsonResponse({"success": "TA created successfully"}, status=201)
 
@@ -1255,10 +1253,10 @@ def change_password(request):
 
         old_password = data.get("old_password")
         new_password = data.get("new_password")
-        username = request.COOKIES.get('username')
+        user_id = request.COOKIES.get('user_id')
 
-        # Fetch the user by username
-        user = User.objects.filter(username=username).first()
+        # Fetch the user by user_id
+        user = User.objects.filter(user_id=user_id).first()
         if user.DoesNotExist:
             return JsonResponse({'error': 'User not found'}, status=404)
 
@@ -1284,7 +1282,7 @@ def all_students(request):
             if not all_students.exists():
                 return JsonResponse({"error": "No students found."}, status=404)
             # Convert QuerySet to a list of dictionaries for JSON serialization
-            students_list = list(all_students.values('user_id', 'first_name', 'last_name', 'username', 'email'))
+            students_list = list(all_students.values('user_id', 'first_name', 'last_name', 'email'))
             return JsonResponse({"students": students_list}, status=200)
         except Exception as e:
             # Handle any unexpected exceptions

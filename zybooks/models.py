@@ -14,12 +14,13 @@ class User(models.Model):
     user_id = models.CharField(max_length=8, primary_key=True) 
     first_name = models.CharField(max_length=30, null=False)
     last_name = models.CharField(max_length=30, null=False)
-    username = models.CharField(max_length=30, unique=True, null=False)
     email = models.EmailField(unique=True, null=False)
     password = models.CharField(max_length=128)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
     
     creation_date = models.DateTimeField(default=timezone.now, null = False)
+    
+    USERNAME_FIELD = 'user_id'
     
     def save(self, *args, **kwargs):
         if not self.user_id:  # Generate user_id only if it hasn't been set
@@ -30,7 +31,7 @@ class User(models.Model):
         super().save(*args, **kwargs)  # Call the original save method
 
     def __str__(self):
-        return f"{self.username} ({self.role})"
+        return f"{self.user_id} ({self.role})"
 
 class TA(models.Model):
     ta = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ta_name', null=True)
@@ -184,9 +185,3 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.user_id} - {self.message[:20]}"
-
-# class Student(models.Model):
-#     user_id = models.ForeignKey(User,on_delete=models.CASCADE)
-#     registered_couser_id = models.ForeignKey(Course,on_delete=models.CASCADE)
-#     total_participation_points = models.PositiveBigIntegerField(default=0)
-#     finished_activites = models.PositiveBigIntegerField(default=0)
