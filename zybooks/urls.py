@@ -46,5 +46,6 @@ urlpatterns = [
     
     path('createta/',views.create_ta,name='create-ta'), # create TA
     path('changepassword/',views.change_password,name="change-password"),
-    path('students/all/',views.all_students,name="all-students")
+    path('students/all/',views.all_students,name="all-students"),
+    path('students/home',views.get_course_details,name='student-home')
 ]

@@ -1292,3 +1292,98 @@ def all_students(request):
 ## ================
 # Student API's 
 ## ================
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_course_details(request):
+    # # Get the enrolled courses student is in
+    student_id = request.COOKIES.get('user_id')
+    user = User.objects.get(user_id=student_id)
+
+    # Get the courses the student is enrolled in
+    enrolled_courses_list = Enrollment.objects.filter(student=user, status='enrolled').values_list('course', flat=True)
+
+    # Prepare the nested JSON response
+    courses_data = []
+
+    for course_id in enrolled_courses_list:
+        course = Course.objects.get(pk=course_id)
+        course_data = {
+            "course_id": course.course_id,
+            "course_name": course.course_name,
+            "course_token": course.course_token,
+            "course_type": course.course_type,
+            "course_capacity": course.course_capacity,
+            "start_date": course.start_date,
+            "end_date": course.end_date,
+            "faculty": course.faculty.user_id,
+            "ta": course.ta.user_id,
+            "textbooks": []
+        }
+
+        textbooks = Textbook.objects.filter(course=course)
+        for textbook in textbooks:
+            textbook_data = {
+                "textbook_id": textbook.textbook_id,
+                "title": textbook.title,
+                "chapters": []
+            }
+            chapters = Chapter.objects.filter(textbook=textbook, hidden=False)
+            for chapter in chapters:
+                chapter_data = {
+                    "chapter_id": chapter.chapter_id,
+                    "chapter_name": chapter.chapter_name,
+                    "title": chapter.title,
+                    "sections": []
+                }
+                sections = Section.objects.filter(chapter=chapter, hidden=False)
+                for section in sections:
+                    section_data = {
+                        "section_id": section.section_id,
+                        "number": section.number,
+                        "title": section.title,
+                        "content": []
+                    }
+
+                    contents = Content.objects.filter(section=section, hidden=False)
+                    for content in contents:
+                        content_data = {
+                            "content_id": content.content_id,
+                            "content_name": content.content_name,
+                            "block_type": content.block_type,
+                            "text_data": content.text_data if content.block_type == "text" else None,
+                            "image_data": content.image_data.url if content.block_type == "image" and content.image_data else None,
+                            "activities": []
+                        }
+
+                        activities = Activity.objects.filter(content=content, hidden=False)
+                        for activity in activities:
+                            activity_data = {
+                                "activity_id": activity.activity_id,
+                                "activity_number": activity.activity_number,
+                                "question": None
+                            }
+
+                            if activity.question:
+                                question = activity.question
+                                activity_data["question"] = {
+                                    "question_id": question.question_id,
+                                    "question_name": question.question_name,
+                                    "question_text": question.question_text,
+                                    "options": [
+                                        {"option": 1, "text": question.option_1_text, "explanation": question.option_1_explanation},
+                                        {"option": 2, "text": question.option_2_text, "explanation": question.option_2_explanation},
+                                        {"option": 3, "text": question.option_3_text, "explanation": question.option_3_explanation},
+                                        {"option": 4, "text": question.option_4_text, "explanation": question.option_4_explanation},
+                                    ],
+                                    "answer": question.answer
+                                }
+                            content_data["activities"].append(activity_data)
+                        section_data["content"].append(content_data)
+                    chapter_data["sections"].append(section_data)
+                textbook_data["chapters"].append(chapter_data)
+            course_data["textbooks"].append(textbook_data)
+        courses_data.append(course_data)
+
+    # Return as JSON response
+    return JsonResponse({"courses": courses_data}, safe=False)
+    return JsonResponse({"s":"dd"})
