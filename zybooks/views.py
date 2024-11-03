@@ -1,4 +1,3 @@
-from django.shortcuts import render 
 from rest_framework.views import APIView
 from . models import *
 from rest_framework.response import Response 
@@ -403,7 +402,7 @@ def create_content(request):
         data = json.loads(request.body)
         
         # Validate required fields
-        required_fields = ["section_number", "chapter_name", "textbook_id", "content_id"]
+        required_fields = ["section_number", "chapter_name", "textbook_id", "content_name"]
         missing_fields = [field for field in required_fields if field not in data]
         
         if missing_fields:
@@ -421,9 +420,12 @@ def create_content(request):
         except Section.DoesNotExist:
             return JsonResponse({"detail": "Section with this ID does not exist"}, status=400)
         
+        if Content.objects.filter(content_name=data.get("content_name"), section=section, chapter=chapter, textbook=textbook).exists():
+            return JsonResponse({"detail": "Content Block with this token already exists"}, status=400)
+        
         # Create and save new content
         content = Content.objects.create(
-            content_id=data.get("content_id"),
+            content_name=data.get("content_name"),
             section=section,
             chapter=chapter,
             textbook=textbook,
@@ -432,7 +434,7 @@ def create_content(request):
         return JsonResponse({
             "textbook_id": content.textbook.textbook_id,
             "chapter_name": content.chapter.chapter_name,
-            "content_id": content.content_id,
+            "content_name": content.content_name,
             "section_id": content.section.section_id,
             "hidden": content.hidden
         }, status=200)
@@ -445,7 +447,7 @@ def create_content(request):
 def read_content(request):
     try:
         # Fetch all content blocks
-        contents = Content.objects.all().values("content_id", "block_type", "text_data", "image_data", "section_id", "chapter_id", "textbook_id", "hidden")
+        contents = Content.objects.all().values("content_id", "content_name", "block_type", "text_data", "image_data", "section_id", "chapter_id", "textbook_id", "hidden")
         return JsonResponse(list(contents), safe=False, status=200)
     
     except Exception as e:
@@ -454,32 +456,52 @@ def read_content(request):
 @csrf_exempt
 @role_required(['admin', 'faculty'])
 @require_http_methods(["GET", "PUT", "DELETE"])
-def content(request, content_id):
+def content(request, content_name):
     try:
+        data = json.loads(request.body)
+        try:
+            textbook = Textbook.objects.get(textbook_id=data.get("textbook_id"))
+            chapter = Chapter.objects.get(chapter_name=data.get("chapter_name"), textbook=textbook)
+            section = Section.objects.get(number=data.get("section_number"), chapter=chapter, textbook=textbook)
+        except Textbook.DoesNotExist or Chapter.DoesNotExist or Section.DoesNotExist:
+            return JsonResponse({"detail": "This textbook or Chapter or Section does not exist"})
+        except Exception as e:
+            return JsonResponse({"detail": str(e)}, status=500)
+        
         # Fetch specific content block by ID
-        content = Content.objects.get(content_id=content_id)
+        content = Content.objects.get(content_name=content_name, section=section, chapter=chapter, textbook=textbook)
         
         if request.method == "GET":
             return JsonResponse({
                 "content_id": content.content_id,
+                "content_name": content.content_name,
                 "block_type": content.block_type,
                 "text_data": content.text_data,
                 "image_data": content.image_data.url if content.image_data else None,
-                "section_id": content.section.section_id,
+                "section_number": content.section.number,
+                "chapter_name": content.chapter.chapter_name,
+                "textbook_id": content.textbook.textbook_id,
                 "hidden": content.hidden
             }, status=200)
         
-        elif request.method == "PUT":
-            data = json.loads(request.body)
-            
+        elif request.method == "PUT":            
             # Update fields with validation
             content.block_type = data.get("block_type", content.block_type)
+
             if content.block_type == 'text':
                 content.text_data = data.get("text_data", content.text_data)
                 content.image_data = None  # Clear image data for text blocks
             elif content.block_type == 'image':
                 content.image_data = data.get("image_data", content.image_data)
                 content.text_data = None  # Clear text data for image blocks
+            elif content.block_type == 'activities':
+                content.image_data = None
+                content.text_data = None
+            elif content.block_type == '':
+                content.image_data = None
+                content.text_data = None
+            else:
+                return JsonResponse({"detail": "block_type needed"})
 
             content.hidden = data.get("hidden", content.hidden)
             content.save()
@@ -497,11 +519,20 @@ def content(request, content_id):
 
 @csrf_exempt
 @role_required(['admin', 'faculty','ta'])
-def content_text(request, content_id):
+def content_text(request, content_name):
     if request.method == "POST":
+        data = json.loads(request.body)
         try:
-            content = Content.objects.get(content_id=content_id)
-            data = json.loads(request.body)
+            textbook = Textbook.objects.get(textbook_id=data.get("textbook_id"))
+            chapter = Chapter.objects.get(chapter_name=data.get("chapter_name"), textbook=textbook)
+            section = Section.objects.get(number=data.get("section_number"), chapter=chapter, textbook=textbook)
+        except Textbook.DoesNotExist or Chapter.DoesNotExist or Section.DoesNotExist:
+            return JsonResponse({"detail": "This textbook or Chapter or Section does not exist"})
+        except Exception as e:
+            return JsonResponse({"detail": str(e)}, status=500)
+        
+        try:
+            content = Content.objects.get(content_name=content_name, section=section, chapter=chapter, textbook=textbook)
             
             content.block_type = 'text' 
 
@@ -521,10 +552,19 @@ def content_text(request, content_id):
     
 @csrf_exempt
 @role_required(['admin', 'faculty','ta'])
-def content_image(request, content_id):
+def content_image(request, content_name):
     if request.method == "POST":
+        data = request.POST
         try:
-            content = Content.objects.get(content_id=content_id)
+            textbook = Textbook.objects.get(textbook_id=data.get("textbook_id"))
+            chapter = Chapter.objects.get(chapter_name=data.get("chapter_name"), textbook=textbook)
+            section = Section.objects.get(number=data.get("section_number"), chapter=chapter, textbook=textbook)
+        except Textbook.DoesNotExist or Chapter.DoesNotExist or Section.DoesNotExist:
+            return JsonResponse({"detail": "This textbook or Chapter or Section does not exist"})
+        except Exception as e:
+            return JsonResponse({"detail": str(e)}, status=500)
+        try:
+            content = Content.objects.get(content_name=content_name, section=section, chapter=chapter, textbook=textbook)
             content.block_type = 'image'
 
             if 'image_data' not in request.FILES:
