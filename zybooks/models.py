@@ -26,7 +26,7 @@ class User(models.Model):
         if not self.user_id:  # Generate user_id only if it hasn't been set
             month = self.creation_date.strftime("%m")  # Get month in 2 digits
             year = self.creation_date.strftime("%y")    # Get year in 2 digits
-            first_part = (self.first_name[:2] + self.last_name[:2]).lower()  # First two letters of first and last names
+            first_part = (self.first_name[:2] + self.last_name[:2])  # First two letters of first and last names
             self.user_id = f"{first_part}{month}{year}"  # Create user_id
         super().save(*args, **kwargs)  # Call the original save method
 

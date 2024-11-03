@@ -23,7 +23,7 @@ def login(request):
         if user:
             # Verify password           
             if check_password(password, user.password):
-                response = JsonResponse({"message": "success",})
+                response = JsonResponse({"message": "success"})
                 # Set cookie with user_id and role
                 response.set_cookie('user_id', user.user_id)
                 response.set_cookie('role', user.role)
@@ -869,8 +869,9 @@ def create_course(request):
         course_capacity = data.get("course_capacity")
         textbook_id = data.get("textbook_id")
         faculty_id = data.get("faculty_id")
+        ta_id = data.get("ta_id")
         # Validate required fields
-        if not course_token or not course_name or not course_type or not course_capacity:
+        if not course_token or not course_name or not course_type or not course_capacity or not start_date or not end_date:
             return JsonResponse({"detail": "Missing required fields"}, status=400)
 
         # Check if the course with the given token already exists
@@ -883,6 +884,11 @@ def create_course(request):
         except User.DoesNotExist:
             return JsonResponse({"detail": "Faculty with this ID does not exist"}, status=400)
 
+        try:
+            ta = User.objects.get(user_id=ta_id)
+        except User.DoesNotExist:
+            return JsonResponse({"detail": "TA with this ID does not exist"}, status=400)
+        
         # Check if textbook_id exists (if provided)
         textbook = None
         if textbook_id:
@@ -900,7 +906,8 @@ def create_course(request):
             end_date=end_date,
             course_type=course_type,
             course_capacity=course_capacity,
-            faculty=faculty
+            faculty=faculty,
+            ta=ta if ta else None
         )
         textbook.course = course
         
@@ -916,7 +923,9 @@ def create_course(request):
             "start_date": course.start_date,
             "end_date": course.end_date,
             "course_type": course.course_type,
-            "course_capacity": course.course_capacity
+            "course_capacity": course.course_capacity,
+            "faculty": course.faculty.user_id,
+            "ta": course.ta.user_id
         }, status=201)
 
     except json.JSONDecodeError:
@@ -997,7 +1006,6 @@ def course(request, course_id):
 @require_http_methods(["POST"])
 def enroll_in_course(request):
     try:
-        # Attempt to parse JSON body
         body = json.loads(request.body)
         first_name = body.get('first_name')
         last_name = body.get('last_name')
@@ -1044,7 +1052,6 @@ def enroll_in_course(request):
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
     
-
 @csrf_exempt
 @role_required(['faculty'])
 @require_http_methods(["GET"])
