@@ -145,7 +145,8 @@ class Content(models.Model):
         super().save(*args, **kwargs)
 
 class Question(models.Model):
-    question_id = models.BigIntegerField(primary_key=True)
+    question_id = models.AutoField(primary_key=True)
+    question_name = models.CharField(max_length=10, default=None)
     question_text = models.TextField()
     
     # Option 1 fields

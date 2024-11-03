@@ -721,39 +721,41 @@ def activity(request, activity_number):
 def create_question(request):
     try:
         data = json.loads(request.body)
-
-        if not data.get("activity_id"):
-            return JsonResponse({"detail": "Need Activity ID to create question"}, status=400)    
-        # Retrieve the associated activity by ID
-        activity_id = data.get("activity_id")
-        activity = Activity.objects.get(activity_id=activity_id)
+        try:
+            textbook = Textbook.objects.get(textbook_id=data.get("textbook_id"))
+            chapter = Chapter.objects.get(chapter_name=data.get("chapter_name"), textbook=textbook)
+            section = Section.objects.get(number=data.get("section_number"), chapter=chapter, textbook=textbook)
+            content = Content.objects.get(content_name=data.get("content_name"), section=section, chapter=chapter, textbook=textbook)
+            activity = Activity.objects.get(activity_number=data.get("activity_number"), content=content)
+        except Textbook.DoesNotExist or Chapter.DoesNotExist or Section.DoesNotExist or Content.DoesNotExist:
+            return JsonResponse({"detail": "This textbook or Chapter or Section or Content does not exist"})
+        except Exception as e:
+            return JsonResponse({"detail": str(e)}, status=500)
         
         # Create and save the new question
         question = Question.objects.create(
-            question_id=data.get("question_id"),
+            question_name=data.get("question_name"),
             question_text=data.get("question_text"),
             option_1_text=data.get("option_1_text"),
             option_1_explanation=data.get("option_1_explanation"),
-            option_1_label=data.get("option_1_label"),
             option_2_text=data.get("option_2_text"),
             option_2_explanation=data.get("option_2_explanation"),
-            option_2_label=data.get("option_2_label"),
             option_3_text=data.get("option_3_text"),
             option_3_explanation=data.get("option_3_explanation"),
-            option_3_label=data.get("option_3_label"),
             option_4_text=data.get("option_4_text"),
             option_4_explanation=data.get("option_4_explanation"),
-            option_4_label=data.get("option_4_label"),
-        )
-        
+            answer=data.get("answer"),
+        )        
         # Associate the question with the activity
         activity.question = question
         activity.save()
 
         return JsonResponse({
             "question_id": question.question_id,
+            "question_name": question.question_name,
             "question_text": question.question_text,
-            "activity_id": activity.activity_id
+            "activity_id": activity.activity_id,
+            "activity_id": activity.activity_number
         }, status=201)
     
     except Activity.DoesNotExist:
@@ -766,11 +768,11 @@ def create_question(request):
 def read_questions(request):
     try:
         questions = Question.objects.all().values(
-            "question_id", "question_text",
-            "option_1_text", "option_1_explanation", "option_1_label",
-            "option_2_text", "option_2_explanation", "option_2_label",
-            "option_3_text", "option_3_explanation", "option_3_label",
-            "option_4_text", "option_4_explanation", "option_4_label"
+            "question_id", "question_name", "question_text",
+            "option_1_text", "option_1_explanation",
+            "option_2_text", "option_2_explanation",
+            "option_3_text", "option_3_explanation",
+            "option_4_text", "option_4_explanation", "answer"
         )
         return JsonResponse(list(questions), safe=False, status=200)
     
@@ -782,25 +784,22 @@ def read_questions(request):
 @role_required(['admin', 'faculty','ta'])
 def question(request, question_id):
     try:
-        # Retrieve specific question by ID
         if request.method == "GET":
             try:
                 question = Question.objects.get(question_id=question_id)
                 data = {
                     "question_id": question.question_id,
+                    "question_name": question.question_name,
                     "question_text": question.question_text,
                     "option_1_text": question.option_1_text,
                     "option_1_explanation": question.option_1_explanation,
-                    "option_1_label": question.option_1_label,
                     "option_2_text": question.option_2_text,
                     "option_2_explanation": question.option_2_explanation,
-                    "option_2_label": question.option_2_label,
                     "option_3_text": question.option_3_text,
                     "option_3_explanation": question.option_3_explanation,
-                    "option_3_label": question.option_3_label,
                     "option_4_text": question.option_4_text,
                     "option_4_explanation": question.option_4_explanation,
-                    "option_4_label": question.option_4_label
+                    "answer": question.answer
                 }
                 return JsonResponse(data, status=200)
             
