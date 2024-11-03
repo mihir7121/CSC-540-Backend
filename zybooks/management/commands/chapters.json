@@ -1,31 +1,31 @@
 [
     {
         "textbook_id": 101,
-        "chapter_id": "chap01",
+        "chapter_name": "chap01",
         "title": "Introduction to Database",
         "hidden": false
     },
     {
         "textbook_id": 101,
-        "chapter_id": "chap02",
+        "chapter_name": "chap02",
         "title": "The Relational Model",
         "hidden": false
     },
     {
         "textbook_id": 102,
-        "chapter_id": "chap01",
+        "chapter_name": "chap01",
         "title": "Introduction to Software Engineering",
         "hidden": false
     },
     {
         "textbook_id": 102,
-        "chapter_id": "chap02",
+        "chapter_name": "chap02",
         "title": "Introduction to Software Development Life Cycle (SDLC)",
         "hidden": false
     },
     {
         "textbook_id": 103,
-        "chapter_id": "chap01",
+        "chapter_name": "chap01",
         "title": "Introduction to Machine Learning",
         "hidden": true
     }

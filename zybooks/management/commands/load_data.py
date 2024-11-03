@@ -48,10 +48,9 @@ class Command(BaseCommand):
                 try:
                     # Retrieve the associated textbook
                     textbook = Textbook.objects.get(textbook_id=chapter['textbook_id'])
-
                     # Create Chapter instance (id is auto-generated)
                     Chapter.objects.create(
-                        chapter_id=chapter['chapter_id'],  # Not unique; it's just a regular field
+                        chapter_name=chapter['chapter_name'],  # Not unique; it's just a regular field
                         title=chapter['title'],
                         textbook=textbook,
                         hidden=chapter['hidden']  # True or False
