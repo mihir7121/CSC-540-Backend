@@ -861,22 +861,33 @@ def create_course(request):
     try:
         data = json.loads(request.body)
         
+        course_id = data.get("course_id")
         course_token = data.get("course_token")
         course_name = data.get("course_name")
-        course_id = data.get("course_id")
-        start_date = data.get("start_date")
-        end_date = data.get("end_date")
         course_type = data.get("course_type")
         course_capacity = data.get("course_capacity")
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
         textbook_id = data.get("textbook_id")
         faculty_id = data.get("faculty_id")
         ta_id = data.get("ta_id")
-        # Validate required fields
-        if not course_id or not course_token or not course_name or not course_type or not course_capacity or not start_date or not end_date:
-            return JsonResponse({"detail": "Missing required fields"}, status=400)
 
-        # Check if the course with the given token already exists
-        if Course.objects.filter(course_token=course_token).exists():
+        # Validate required fields based on course_type
+        if course_type == "active":
+            required_fields = [course_id, course_token, course_name, course_type, course_capacity, start_date, end_date, textbook_id, faculty_id]
+            if not all(required_fields):
+                return JsonResponse({"detail": "Missing required fields for active course type"}, status=400)
+        elif course_type == "evaluation":
+            required_fields = [course_id, course_name, course_type, start_date, end_date, textbook_id, faculty_id]
+            if not all(required_fields):
+                return JsonResponse({"detail": "Missing required fields for evaluation course type"}, status=400)
+            course_token = None
+            course_capacity = None
+        else:
+            return JsonResponse({"detail": "Invalid course type"}, status=400)
+
+        # Check if a course with the given token already exists (only for active courses)
+        if course_type == "active" and Course.objects.filter(course_token=course_token).exists():
             return JsonResponse({"detail": "Course with this token already exists"}, status=400)
 
         # Check if faculty_id exists
@@ -892,7 +903,7 @@ def create_course(request):
             except User.DoesNotExist:
                 return JsonResponse({"detail": "TA with this ID does not exist"}, status=400)
         
-        # Check if textbook_id exists (if provided)
+        # Verify that the textbook exists, if provided
         textbook = None
         if textbook_id:
             try:
@@ -905,19 +916,19 @@ def create_course(request):
             course_id=course_id,
             course_token=course_token,
             course_name=course_name,
-            start_date=start_date,
-            end_date=end_date,
             course_type=course_type,
             course_capacity=course_capacity,
+            start_date=start_date,
+            end_date=end_date,
             faculty=faculty,
-            ta=ta if ta else None
+            ta=ta
         )
         textbook.course = course
         
         # Save the course instance
         course.save()
         textbook.save()
-        print("HEREE")
+
         # Return response with course details
         return JsonResponse({
             "course_id": course.course_id,
