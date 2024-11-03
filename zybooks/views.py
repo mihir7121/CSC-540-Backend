@@ -863,6 +863,7 @@ def create_course(request):
         
         course_token = data.get("course_token")
         course_name = data.get("course_name")
+        course_id = data.get("course_id")
         start_date = data.get("start_date")
         end_date = data.get("end_date")
         course_type = data.get("course_type")
@@ -871,7 +872,7 @@ def create_course(request):
         faculty_id = data.get("faculty_id")
         ta_id = data.get("ta_id")
         # Validate required fields
-        if not course_token or not course_name or not course_type or not course_capacity or not start_date or not end_date:
+        if not course_id or not course_token or not course_name or not course_type or not course_capacity or not start_date or not end_date:
             return JsonResponse({"detail": "Missing required fields"}, status=400)
 
         # Check if the course with the given token already exists
@@ -884,10 +885,12 @@ def create_course(request):
         except User.DoesNotExist:
             return JsonResponse({"detail": "Faculty with this ID does not exist"}, status=400)
 
-        try:
-            ta = User.objects.get(user_id=ta_id)
-        except User.DoesNotExist:
-            return JsonResponse({"detail": "TA with this ID does not exist"}, status=400)
+        ta = None
+        if ta_id:
+            try:
+                ta = User.objects.get(user_id=ta_id)
+            except User.DoesNotExist:
+                return JsonResponse({"detail": "TA with this ID does not exist"}, status=400)
         
         # Check if textbook_id exists (if provided)
         textbook = None
@@ -897,9 +900,9 @@ def create_course(request):
             except Textbook.DoesNotExist:
                 return JsonResponse({"detail": "E-textbook with this ID does not exist"}, status=400)
 
-        
         # Create the course
         course = Course(
+            course_id=course_id,
             course_token=course_token,
             course_name=course_name,
             start_date=start_date,
@@ -914,7 +917,7 @@ def create_course(request):
         # Save the course instance
         course.save()
         textbook.save()
-
+        print("HEREE")
         # Return response with course details
         return JsonResponse({
             "course_id": course.course_id,
@@ -925,7 +928,7 @@ def create_course(request):
             "course_type": course.course_type,
             "course_capacity": course.course_capacity,
             "faculty": course.faculty.user_id,
-            "ta": course.ta.user_id
+            "ta": course.ta.user_id if course.ta else None
         }, status=201)
 
     except json.JSONDecodeError:
@@ -1205,6 +1208,46 @@ def view_notifications(request):
         
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
+
+# ===========================
+# ADD Faculty
+# ===========================  
+@csrf_exempt
+@role_required(['admin'])
+@require_http_methods(["POST"])
+def create_faculty(request):
+    try:
+        data = json.loads(request.body)
+        first_name = data.get("first_name")
+        last_name = data.get("last_name")
+        email = data.get("email")
+        password = data.get("password")
+        role = "faculty"
+
+        if not all([email, password, role, first_name, last_name]):
+            return JsonResponse({"error": "All fields are required."}, status=400)
+
+        if User.objects.filter(email=email, first_name=first_name, last_name=last_name).exists():
+            return JsonResponse({"error": "User with this email already exists."}, status=400)
+
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({"error": "Email already exists."}, status=400)
+
+        # Create and save the new user
+        hashed_password = make_password(password)  # Hash the password
+        new_user = User(
+            email=email,
+            password=hashed_password,
+            role=role,
+            first_name=first_name,
+            last_name=last_name
+        )
+        new_user.save()
+        return JsonResponse({"message": "User registered successfully!",
+                                "user_id": new_user.user_id
+                                }, status=201)
+    except Exception as e:
+        return JsonResponse({'error': 'Invalid JSON: ' + str(e)}, status=400)
 
 # ===========================
 # ADD TA

@@ -44,8 +44,9 @@ urlpatterns = [
     path('courses/<int:course_id>/update-enrollment/', views.update_enrollment_status, name='update_enrollment_status'), #update enrollment
     path('notifications/', views.view_notifications, name='view_notifications'), 
     
-    path('createta/',views.create_ta,name='create-ta'), # create TA
-    path('changepassword/',views.change_password,name="change-password"),
-    path('students/all/',views.all_students,name="all-students"),
-    path('students/home',views.get_course_details,name='student-home')
+    path('createfaculty/', views.create_faculty, name='create_faculty'),
+    path('createta/',views.create_ta,name='create_ta'), # create TA
+    path('changepassword/',views.change_password,name="change_password"),
+    path('students/all/',views.all_students,name="all_students"),
+    path('students/home/',views.get_course_details,name='student_home')
 ]
