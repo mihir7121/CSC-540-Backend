@@ -36,12 +36,12 @@ urlpatterns = [
 
     path('courses/', views.create_course, name='create_course'),      
     path('courses/all/', views.read_courses, name='read_courses'),  
-    path('courses/<int:course_id>/', views.course, name='course'),  
+    path('courses/<str:course_id>/', views.course, name='course'),  
     
     path('courses/enroll/', views.enroll_in_course, name='enroll_in_course'), #course enrollment
-    path('courses/<int:course_id>/worklist/', views.course_worklist, name='course_worklist'), #view worklist
-    path('courses/<int:course_id>/students/', views.course_students, name='course_students'), #view enrolled students      
-    path('courses/<int:course_id>/update-enrollment/', views.update_enrollment_status, name='update_enrollment_status'), #update enrollment
+    path('courses/<str:course_id>/worklist/', views.course_worklist, name='course_worklist'), #view worklist
+    path('courses/<str:course_id>/students/', views.course_students, name='course_students'), #view enrolled students      
+    path('courses/<str:course_id>/update-enrollment/', views.update_enrollment_status, name='update_enrollment_status'), #update enrollment
     path('notifications/', views.view_notifications, name='view_notifications'), 
     
     path('createfaculty/', views.create_faculty, name='create_faculty'),

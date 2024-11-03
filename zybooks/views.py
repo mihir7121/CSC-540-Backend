@@ -1104,11 +1104,11 @@ def course_worklist(request, course_id):
 
 
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty', 'ta'])
 @require_http_methods(["GET"])
 def course_students(request, course_id):
     try:
-        faculty_user_id = request.COOKIES.get('user_id')  
+        faculty_user_id = request.COOKIES.get('user_id')
         if not faculty_user_id:
             return JsonResponse({"detail": "Missing faculty identifier in cookies"}, status=400)
 
