@@ -84,7 +84,8 @@ class Textbook(models.Model):
         return self.title
 
 class Chapter(models.Model):
-    chapter_id = models.CharField(max_length=7)
+    chapter_id = models.AutoField(primary_key=True)
+    chapter_name = models.CharField(max_length=10)
     title = models.CharField(max_length=100)
     textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
     hidden = models.BooleanField()
@@ -113,14 +114,17 @@ class Content(models.Model):
     BLOCK_TYPE_CHOICES = [
         ('text', 'Text'),
         ('image', 'Image'),
-        ('activity', 'Activity'),
+        ('activities', 'Activities')
     ]
 
-    content_id = models.CharField(max_length=10, primary_key=True)
+    content_id = models.AutoField(primary_key=True)
+    content_name = models.CharField(max_length=10)
     block_type = models.CharField(max_length=10, choices=BLOCK_TYPE_CHOICES, blank=True)
     text_data = models.TextField(blank=True, null=True)  # Field for text content
     image_data = models.ImageField(upload_to='images/', blank=True, null=True)
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
+    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
+    textbook = models.ForeignKey(Textbook, on_delete=models.CASCADE)
     hidden = models.BooleanField(blank=True)
 
     class Meta:

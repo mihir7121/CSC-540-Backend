@@ -174,7 +174,7 @@ def create_chapter(request):
         data = json.loads(request.body)
         
         textbook_id = data.get("textbook_id")
-        chapter_id = data.get("chapter_id")
+        chapter_name = data.get("chapter_name")
 
         # Check if the referenced textbook exists
         try:
@@ -183,19 +183,19 @@ def create_chapter(request):
             return JsonResponse({"detail": "Textbook with this ID does not exist"}, status=400)
         
         # Check if the chapter already exists in that textbook
-        if Chapter.objects.filter(chapter_id=chapter_id, textbook=textbook).exists():
+        if Chapter.objects.filter(chapter_name=chapter_name, textbook=textbook).exists():
             return JsonResponse({"detail": "Chapter with this ID in this textbook already exists"}, status=400)
-        
-        
+                
         # Create and save new chapter
         chapter = Chapter.objects.create(
-            chapter_id = data.get("chapter_id"),
+            chapter_name = data.get("chapter_name"),
             title=data.get("title"),
             textbook=textbook,
             hidden=data.get("hidden", False)
         )
         return JsonResponse({
             "chapter_id": chapter.chapter_id,
+            "chapter_name": chapter.chapter_name,
             "title": chapter.title,
             "textbook_id": chapter.textbook.textbook_id,
             "hidden": chapter.hidden
@@ -209,7 +209,7 @@ def create_chapter(request):
 def read_chapter(request):
     try:       
         # Fetch all chapters if no ID is provided
-        chapters = Chapter.objects.all().values("chapter_id", "title", "textbook", "hidden")
+        chapters = Chapter.objects.all().values("chapter_id", "chapter_name", "title", "textbook_id", "hidden")
         return JsonResponse(list(chapters), safe=False, status=200)
     
     except Exception as e:
@@ -218,16 +218,17 @@ def read_chapter(request):
 @csrf_exempt
 @role_required(['admin', 'faculty','ta'])  
 @require_http_methods(["GET", "PUT", "DELETE"])
-def chapter(request, chapter_id):
+def chapter(request, chapter_name):
     data = json.loads(request.body)
     textbook = Textbook.objects.get(textbook_id = data.get('textbook_id'))
 
     if request.method == "GET":
-        if chapter_id:
+        if chapter_name:
             try:
-                chapter = Chapter.objects.get(chapter_id=chapter_id, textbook=textbook)
+                chapter = Chapter.objects.get(chapter_name=chapter_name, textbook=textbook)
                 return JsonResponse({
                     "chapter_id": chapter.chapter_id,
+                    "chapter_name": chapter.chapter_name,
                     "title": chapter.title,
                     "textbook_id": chapter.textbook.textbook_id,
                     "hidden": chapter.hidden
@@ -238,7 +239,7 @@ def chapter(request, chapter_id):
     elif request.method == "PUT":
         try:            
             try:
-                chapter = Chapter.objects.get(chapter_id=chapter_id, textbook=textbook)
+                chapter = Chapter.objects.get(chapter_name=chapter_name, textbook=textbook)
             except Chapter.DoesNotExist:
                 return JsonResponse({"detail": "Chapter not found"}, status=404)
             
@@ -248,6 +249,7 @@ def chapter(request, chapter_id):
             
             return JsonResponse({
                 "chapter_id": chapter.chapter_id,
+                "chapter_name": chapter.chapter_name,
                 "title": chapter.title,
                 "textbook_id": chapter.textbook.textbook_id,
                 "hidden": chapter.hidden
@@ -259,7 +261,7 @@ def chapter(request, chapter_id):
     elif request.method == "DELETE":
         try:
             try:
-                chapter = Chapter.objects.get(chapter_id=chapter_id, textbook=textbook)
+                chapter = Chapter.objects.get(chapter_name=chapter_name, textbook=textbook)
             except Chapter.DoesNotExist:
                 return JsonResponse({"detail": "Chapter not found"}, status=404)
             
@@ -268,7 +270,6 @@ def chapter(request, chapter_id):
         
         except Exception as e:
             return JsonResponse({"detail": str(e)}, status=500)    
-
 
 
 # ===========================
@@ -402,7 +403,7 @@ def create_content(request):
         data = json.loads(request.body)
         
         # Validate required fields
-        required_fields = ["number", "chapter_id", "textbook_id", "content_id"]
+        required_fields = ["section_number", "chapter_id", "textbook_id", "content_id"]
         missing_fields = [field for field in required_fields if field not in data]
         
         if missing_fields:
@@ -412,11 +413,11 @@ def create_content(request):
             )
         
         # Fetch Chapter and Textbook objects
-        chapter = Chapter.objects.get(chapter_id=data.get("chapter_id"))
         textbook = Textbook.objects.get(textbook_id=data.get("textbook_id"))
-
+        chapter = Chapter.objects.get(chapter_id=data.get("chapter_id"), textbook=textbook)
+        
         try:
-            section = Section.objects.get(section_id=data.get("section_id"), chapter=chapter, textbook=textbook)
+            section = Section.objects.get(number=data.get("section_number"), chapter=chapter, textbook=textbook)
         except Section.DoesNotExist:
             return JsonResponse({"detail": "Section with this ID does not exist"}, status=400)
         

@@ -14,7 +14,7 @@ urlpatterns = [
 
     path('chapters/', views.create_chapter, name='create_chapter'),
     path('chapters/all/', views.read_chapter, name='create_chapter'),
-    path('chapters/<str:chapter_id>/', views.chapter, name='chapter'),
+    path('chapters/<str:chapter_name>/', views.chapter, name='chapter'),
 
     path('sections/', views.create_section, name='create_section'),
     path('sections/all/', views.read_section, name='create_section'),
