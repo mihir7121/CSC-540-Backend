@@ -19,8 +19,10 @@ def login(request):
         data = json.loads(request.body)
         user_id = data.get('user_id')
         password = data.get('password')
+        print(make_password(password))
         user = User.objects.filter(user_id=user_id).first()
         if user:
+            print(user.password)
             # Verify password           
             if check_password(password, user.password):
                 response = JsonResponse({"message": "success"})
@@ -1268,31 +1270,41 @@ def create_faculty(request):
 @require_http_methods(["POST"])
 def create_ta(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        first_name = data.get('firstname')
-        last_name = data.get('lastname')
-        email_id = data.get('email')
-        default_password = data.get('password')
-        course_id = data.get('course_id')
-        user_id = request.COOKIES.get('user_id')
-        faculty_id = User.objects.get(user_id=user_id).user_id
-        user = User.objects.filter(first_name=first_name, last_name=last_name, email=email_id).first()
-        if user:
-            return JsonResponse({"error": "TA Already Exists"}, status=400)
-        else:
-            # Create and save a new TA instance
-            new_user = User(first_name=first_name, last_name=last_name, email=email_id, password=default_password)
+        try:
+            data = json.loads(request.body)
+            first_name = data.get('first_name')
+            last_name = data.get('last_name')
+            email_id = data.get('email')
+            default_password = data.get('default_password')
+            faculty_id = request.COOKIES.get('user_id')  # faculty creating the TA
+
+            # Verify faculty ID and role
+            faculty_user = User.objects.filter(user_id=faculty_id, role='faculty').first()
+            
+            if not faculty_user:
+                return JsonResponse({"error": "Invalid Login. Login as Faculty to create a TA"}, status=403)
+
+            # Check if the TA already exists
+            user = User.objects.filter(first_name=first_name, last_name=last_name, email=email_id).first()
+            if user:
+                return JsonResponse({"error": "TA Already Exists"}, status=400)
+
+            # Create new user and TA record
+            hashed_password = make_password(default_password)
+            new_user = User(first_name=first_name, last_name=last_name, email=email_id, password=hashed_password, role='ta')
             new_user.save()
-            # faculty_id = request.COOKIES.get('user_id')
-            try:
-                course_selected = Course.objects.get(course_id=course_id)
-            except Course.DoesNotExist:
-                return JsonResponse({'error': 'Course ID does not exist'}, status=404)
-            course_selected.ta = new_user
-            course_selected.save()
-            ta = TA(ta=new_user, faculty_id=User.objects.get(user_id=faculty_id))
+
+            ta = TA(ta=new_user, associated_faculty=faculty_user)
             ta.save()
-            return JsonResponse({"success": "TA created successfully"}, status=201)
+
+            return JsonResponse({"success": "TA created successfully", "user_id": new_user.user_id}, status=201)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+        except User.DoesNotExist:
+            return JsonResponse({"error": "Faculty user does not exist"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Only POST method is allowed"}, status=405)
 

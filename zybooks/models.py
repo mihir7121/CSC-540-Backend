@@ -40,7 +40,7 @@ class TA(models.Model):
     hours_per_week = models.PositiveIntegerField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name} - TA for {self.associated_faculty.user.last_name}"
+        return f"{self.ta.first_name} {self.ta.last_name} - TA for {self.associated_faculty.last_name}"
 
 class Course(models.Model):
     TYPE_CHOICES = [
