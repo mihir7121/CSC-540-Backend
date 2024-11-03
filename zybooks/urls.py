@@ -28,7 +28,7 @@ urlpatterns = [
     
     path('activities/', views.create_activity, name='create_activity'),
     path('activities/all/', views.read_activity, name='create_activity'),
-    path('activities/<int:activity_id>/', views.activity, name='activity'),
+    path('activities/<str:activity_number>/', views.activity, name='activity'),
 
     path('questions/', views.create_question, name='create_question'),
     path('questions/all/', views.read_questions, name='create_question'),

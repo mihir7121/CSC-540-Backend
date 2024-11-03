@@ -151,28 +151,27 @@ class Question(models.Model):
     # Option 1 fields
     option_1_text = models.CharField(max_length=255)
     option_1_explanation = models.TextField(blank=True, null=True)
-    option_1_label = models.BooleanField()  # True for correct, False for incorrect
     
     # Option 2 fields
     option_2_text = models.CharField(max_length=255)
     option_2_explanation = models.TextField(blank=True, null=True)
-    option_2_label = models.BooleanField()
     
     # Option 3 fields
     option_3_text = models.CharField(max_length=255)
     option_3_explanation = models.TextField(blank=True, null=True)
-    option_3_label = models.BooleanField()
-    
+
     # Option 4 fields
     option_4_text = models.CharField(max_length=255)
     option_4_explanation = models.TextField(blank=True, null=True)
-    option_4_label = models.BooleanField()
+
+    answer = models.PositiveIntegerField()
 
     def __str__(self):
         return f"Question {self.question_id}: {self.question_text}"
 
 class Activity(models.Model):
-    activity_id = models.CharField(max_length=20, primary_key=True)
+    activity_id = models.AutoField(primary_key=True)
+    activity_number = models.CharField(max_length=20)
     content = models.ForeignKey(Content, on_delete=models.CASCADE, null=True, blank=True)
     question = models.ForeignKey(Question, on_delete=models.SET_NULL, blank=True, null=True)
     hidden = models.BooleanField()
