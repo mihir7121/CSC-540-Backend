@@ -283,14 +283,14 @@ def create_section(request):
         data = json.loads(request.body)
         
         # Check if the referenced chapter exists
-        chapter_id = data.get("chapter_id")
+        chapter_name = data.get("chapter_name")
         textbook_id = data.get("textbook_id")
         
         try:
             textbook = Textbook.objects.get(textbook_id=textbook_id)
-            chapter = Chapter.objects.get(chapter_id=chapter_id, textbook=textbook)
+            chapter = Chapter.objects.get(chapter_name=chapter_name, textbook=textbook)
         except Textbook.DoesNotExist or Chapter.DoesNotExist:
-            return JsonResponse({"detail": "Textbook/Chapter with this ID does not exist"}, status=400)
+            return JsonResponse({"detail": "Textbook or Chapter with this ID does not exist"}, status=400)
         
         # Check if the section already exists
         if Section.objects.filter(number=data.get("number"), chapter=chapter, textbook=textbook).exists():
@@ -308,7 +308,7 @@ def create_section(request):
             "section_id (wont be using)": section.section_id,
             "number": section.number,
             "title": section.title,
-            "chapter_id": section.chapter.chapter_id,
+            "chapter_name": section.chapter.chapter_name,
             "textbook_id": section.textbook.textbook_id,
             "hidden": section.hidden
         }, status=200)
@@ -334,7 +334,7 @@ def section(request, number):
     data = json.loads(request.body)
     try:
         textbook = Textbook.objects.get(textbook_id=data.get("textbook_id"))
-        chapter = Chapter.objects.get(chapter_id=data.get("chapter_id"), textbook=textbook)
+        chapter = Chapter.objects.get(chapter_name=data.get("chapter_name"), textbook=textbook)
     except Textbook.DoesNotExist or Chapter.DoesNotExist:
         return JsonResponse({"detail": "This textbook/chapter does not exist"})
     except Exception as e:
@@ -348,7 +348,7 @@ def section(request, number):
                     "section_id": section.section_id,
                     "number": section.number,
                     "title": section.title,
-                    "chapter_id": section.chapter.chapter_id,
+                    "chapter_name": section.chapter.chapter_name,
                     "textbook_id": section.textbook.textbook_id,
                     "hidden": section.hidden
                 }, status=200)
@@ -371,7 +371,7 @@ def section(request, number):
             return JsonResponse({
                 "number": section.number,
                 "title": section.title,
-                "chapter_id": section.chapter.chapter_id,
+                "chapter_name": section.chapter.chapter_name,
                 "textbook_id": section.textbook.textbook_id,
                 "hidden": section.hidden
             }, status=200)
@@ -403,7 +403,7 @@ def create_content(request):
         data = json.loads(request.body)
         
         # Validate required fields
-        required_fields = ["section_number", "chapter_id", "textbook_id", "content_id"]
+        required_fields = ["section_number", "chapter_name", "textbook_id", "content_id"]
         missing_fields = [field for field in required_fields if field not in data]
         
         if missing_fields:
@@ -414,7 +414,7 @@ def create_content(request):
         
         # Fetch Chapter and Textbook objects
         textbook = Textbook.objects.get(textbook_id=data.get("textbook_id"))
-        chapter = Chapter.objects.get(chapter_id=data.get("chapter_id"), textbook=textbook)
+        chapter = Chapter.objects.get(chapter_name=data.get("chapter_name"), textbook=textbook)
         
         try:
             section = Section.objects.get(number=data.get("section_number"), chapter=chapter, textbook=textbook)
@@ -431,7 +431,7 @@ def create_content(request):
         )
         return JsonResponse({
             "textbook_id": content.textbook.textbook_id,
-            "chapter_id": content.chapter.id,
+            "chapter_name": content.chapter.chapter_name,
             "content_id": content.content_id,
             "section_id": content.section.section_id,
             "hidden": content.hidden
@@ -1217,51 +1217,3 @@ def all_students(request):
 ## ================
 # Student API's 
 ## ================
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def get_section_details(request):
-    try:
-        # Attempt to parse JSON body
-        body = json.loads(request.body)
-        chapter_id = body.get('chapter_id')
-        section_number = body.get('section_number')
-        textbook_id = body.get('textbook_id')
-
-        # Check for missing fields
-        if chapter_id is None or section_number is None:
-            return JsonResponse({"detail": "Missing required fields"}, status=400)
-
-        # Fetch chapter from the database
-        try:
-            chapter = Chapter.objects.get(chapter_id=chapter_id,textbook_id=textbook_id)
-        except Chapter.DoesNotExist:
-            return JsonResponse({"detail": "Chapter not found"}, status=404)
-        # Fetch section from the database
-        try:
-            print(chapter.chapter_id)
-            section = Section.objects.get(number=section_number,chapter=chapter,textbook=textbook_id)
-        except Section.DoesNotExist:
-            return JsonResponse({"detail": "Section not found"}, status=404)
-
-        # Prepare the section data to return
-        section_data = {
-            "section_id": section.section_id,
-            "number": section.number,
-            "title": section.title,
-            "chapter_id": chapter.chapter_id,
-            "textbook_id": section.textbook.textbook_id,  # Assuming you want the textbook ID
-            "hidden": section.hidden,
-            "chapter_title": chapter.title  # Include the chapter title if needed
-        }
-
-        # Respond with the section data
-        return JsonResponse({
-            "message": "Details retrieved successfully",
-            "section": section_data
-        }, status=200)
-
-    except json.JSONDecodeError:
-        return JsonResponse({"detail": "Invalid JSON"}, status=400)
-    except Exception as e:
-        return JsonResponse({"detail": str(e)}, status=500)
