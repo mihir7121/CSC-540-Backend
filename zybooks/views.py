@@ -19,10 +19,9 @@ def login(request):
         data = json.loads(request.body)
         user_id = data.get('user_id')
         password = data.get('password')
-        print(make_password(password))
+
         user = User.objects.filter(user_id=user_id).first()
         if user:
-            print(user.password)
             # Verify password           
             if check_password(password, user.password):
                 response = JsonResponse({"message": "success"})
@@ -127,10 +126,15 @@ def textbook(request, textbook_id):
         except Textbook.DoesNotExist:
             return JsonResponse({"detail": "Textbook not found"}, status=404)
 
+        chapters = Chapter.objects.filter(textbook=textbook).values(
+            "chapter_id", "chapter_name", "title", "hidden"
+        )
+
         return JsonResponse({
             "textbook_id": textbook.textbook_id,
             "title": textbook.title,
-            "course_id": textbook.course_id
+            "course_id": textbook.course.course_id,
+            "chapters": list(chapters)
         }, status=200)
     
     elif request.method == "PUT":
