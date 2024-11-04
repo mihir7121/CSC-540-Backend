@@ -1294,7 +1294,8 @@ def create_ta(request):
             email_id = data.get('email')
             default_password = data.get('default_password')
             faculty_id = request.COOKIES.get('user_id')  # faculty creating the TA
-
+            course_id = data.get('course_id') # get course id to link the TA
+            print(course_id)
             # Verify faculty ID and role
             faculty_user = User.objects.filter(user_id=faculty_id, role='faculty').first()
             
@@ -1313,6 +1314,11 @@ def create_ta(request):
 
             ta = TA(ta=new_user, associated_faculty=faculty_user)
             ta.save()
+
+            course = Course.objects.filter(course_id = course_id).first()
+            print(course.course_id,course.ta)
+            course.ta = new_user
+            course.save()
 
             return JsonResponse({"success": "TA created successfully", "user_id": new_user.user_id}, status=201)
 
