@@ -1038,53 +1038,69 @@ def course(request, course_id):
 @csrf_exempt
 @require_http_methods(["POST"])
 def enroll_in_course(request):
-    try:
-        body = json.loads(request.body)
-        first_name = body.get('first_name')
-        last_name = body.get('last_name')
-        email = body.get('email')
-        course_token = body.get('course_token')
-        
-        # Check for missing fields
-        if not all([first_name, last_name, email, course_token]):
-            return JsonResponse({"detail": "Please fill in all the fields"}, status=400)
-        
-        # Check if user exists
+    if request.method == "POST":
         try:
-            student = User.objects.get(first_name=first_name, last_name=last_name, email=email)
-            if not hasattr(student, 'role') or student.role != 'student':
-                return JsonResponse({"detail": "User is not a student or invalid role"}, status=403)
-        except User.DoesNotExist:
-            return JsonResponse({"detail": "Invalid Creds: Student not found"}, status=404)
+            body = json.loads(request.body)
+            first_name = body.get('first_name')
+            last_name = body.get('last_name')
+            email = body.get('email')
+            course_token = body.get('course_token')
+            
+            # Check for missing fields
+            if not all([first_name, last_name, email, course_token]):
+                return JsonResponse({"detail": "Please fill in all the fields"}, status=400)
+            
+            # Default password for new users
+            default_password = "test123"
+            user_created = False
+            # Check if user exists, else create a new student
+            try:
+                student = User.objects.get(first_name=first_name, last_name=last_name, email=email)
+                if not hasattr(student, 'role') or student.role != 'student':
+                    return JsonResponse({"detail": "User is not a student or has an invalid role"}, status=403)
+            except User.DoesNotExist:
+                # Create the user with default password and role 'student'
+                user_created = True
+                student = User(first_name=first_name, last_name=last_name, email=email, password=make_password(default_password), role="student")
+                student.save()
 
-        # Check if course exists
-        try:
-            course = Course.objects.get(course_token=course_token)
-        except Course.DoesNotExist:
-            return JsonResponse({"detail": "Invalid Course not found"}, status=404)
+            # Check if course exists
+            try:
+                course = Course.objects.get(course_token=course_token)
+            except Course.DoesNotExist:
+                return JsonResponse({"detail": "Course not found"}, status=404)
 
-        # Check if enrollment already exists
-        if Enrollment.objects.filter(student=student, course=course).exists():
-            return JsonResponse({"detail": f"Student is already present in this course"}, status=400)
+            # Check if enrollment already exists
+            if Enrollment.objects.filter(student=student, course=course).exists():
+                return JsonResponse({"detail": "Student is already enrolled in this course"}, status=400)
 
-        # Create enrollment
-        enrollment = Enrollment(student=student, course=course, status='pending')
-        enrollment.save()
+            # Create enrollment
+            enrollment = Enrollment(student=student, course=course, status='pending')
+            enrollment.save()
 
-        return JsonResponse({
-            "message": "Enrollment successful",
-            "student_id": student.user_id,
-            "course_id": course.course_id,
-            "status": enrollment.status
-        }, status=201)
-    
-    except json.JSONDecodeError:
-        return JsonResponse({"detail": "Invalid JSON"}, status=400)
-    except KeyError as e:
-        return JsonResponse({"detail": f"Missing key: {str(e)}"}, status=400)
-    except Exception as e:
-        return JsonResponse({"detail": str(e)}, status=500)
-    
+            # Response JSON based on whether the user was created or already existed
+            response_data = {
+                "message": "Enrollment successful. You are in waiting period.",
+                "student_id": student.user_id,
+                "course_id": course.course_id,
+                "status": enrollment.status,
+                "user_created": user_created
+            }
+
+            # Include default password if the user was created
+            if user_created:
+                response_data["default_password"] = default_password
+
+            return JsonResponse(response_data, status=201)
+        
+        except json.JSONDecodeError:
+            return JsonResponse({"detail": "Invalid JSON format"}, status=400)
+        except KeyError as e:
+            return JsonResponse({"detail": f"Missing key: {str(e)}"}, status=400)
+        except Exception as e:
+            return JsonResponse({"detail": str(e)}, status=500)
+        
+
 @csrf_exempt
 @role_required(['faculty'])
 @require_http_methods(["GET"])
@@ -1295,7 +1311,6 @@ def create_ta(request):
             default_password = data.get('default_password')
             faculty_id = request.COOKIES.get('user_id')  # faculty creating the TA
             course_id = data.get('course_id') # get course id to link the TA
-            print(course_id)
             # Verify faculty ID and role
             faculty_user = User.objects.filter(user_id=faculty_id, role='faculty').first()
             
