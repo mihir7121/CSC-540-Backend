@@ -346,7 +346,7 @@ def section(request, number):
     try:
         textbook = Textbook.objects.get(textbook_id=data.get("textbook_id"))
         chapter = Chapter.objects.get(chapter_name=data.get("chapter_name"), textbook=textbook)
-    except Textbook.DoesNotExist or Chapter.DoesNotExist:
+    except (Textbook.DoesNotExist, Chapter.DoesNotExist):
         return JsonResponse({"detail": "This textbook/chapter does not exist"})
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
@@ -355,13 +355,20 @@ def section(request, number):
         if number:
             try:
                 section = Section.objects.get(number=number, chapter=chapter, textbook=textbook)
+                
+                contents = Content.objects.filter(section=section).values(
+                    "content_id", "content_name", "block_type", "text_data", 
+                    "image_data", "hidden"
+                )
+
                 return JsonResponse({
                     "section_id": section.section_id,
                     "number": section.number,
                     "title": section.title,
                     "chapter_name": section.chapter.chapter_name,
                     "textbook_id": section.textbook.textbook_id,
-                    "hidden": section.hidden
+                    "hidden": section.hidden,
+                    "contents": list(contents)
                 }, status=200)
             except Section.DoesNotExist:
                 return JsonResponse({"detail": "Section not found"}, status=404)
