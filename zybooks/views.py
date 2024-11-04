@@ -953,12 +953,29 @@ def create_course(request):
 @require_http_methods(["GET"])
 def read_courses(request):
     try:
-        courses = Course.objects.all().values(
-            "course_id", "course_token", "course_name", "start_date", 
-            "end_date", "course_type", "course_capacity", 
-            "faculty", "ta"
-        )
+        user_id = request.COOKIES.get('user_id')
+        if not user_id:
+            return JsonResponse({"detail": "User not logged in"}, status=400)
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({"detail": "User not found"}, status=404)
+
+        if user.role == 'faculty':
+            courses = Course.objects.filter(faculty=user).values(
+                "course_id", "course_token", "course_name", "start_date", 
+                "end_date", "course_type", "course_capacity", "faculty", "ta"
+            )
+        elif user.role == 'ta':
+            courses = Course.objects.filter(ta=user).values(
+                "course_id", "course_token", "course_name", "start_date", 
+                "end_date", "course_type", "course_capacity", "faculty", "ta"
+            )
+        else:
+            return JsonResponse({"detail": "User does not have permission to view courses"}, status=403)
+
         return JsonResponse(list(courses), safe=False, status=200)
+        
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
 
