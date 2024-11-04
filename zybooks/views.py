@@ -229,15 +229,23 @@ def chapter(request, chapter_name):
         if chapter_name:
             try:
                 chapter = Chapter.objects.get(chapter_name=chapter_name, textbook=textbook)
+                
+                # Get all sections related to this chapter
+                sections = Section.objects.filter(chapter=chapter, textbook=textbook).values(
+                    "section_id", "number", "title", "hidden"
+                )
                 return JsonResponse({
                     "chapter_id": chapter.chapter_id,
                     "chapter_name": chapter.chapter_name,
                     "title": chapter.title,
                     "textbook_id": chapter.textbook.textbook_id,
-                    "hidden": chapter.hidden
+                    "hidden": chapter.hidden,
+                    "sections": list(sections)  
                 }, status=200)
             except Chapter.DoesNotExist:
                 return JsonResponse({"detail": "Chapter not found"}, status=404)
+            except Exception as e:
+                return JsonResponse({"detail": str(e)}, status=500)
     
     elif request.method == "PUT":
         try:            
