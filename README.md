@@ -49,6 +49,12 @@ The development server should now be accessible at `http://127.0.0.1:8000`.
 - db.sqlite3: The SQLite database file for local development.
 - requirements.txt: Lists all Python packages required for the project.
 
+
+The E-Learning Application is a Django-based platform designed to manage digital textbooks, courses, and student engagement through activities. It supports a collection of e-textbooks, each with chapters, sections, and content blocks (text or images) organized in a hierarchical structure. Admins can create and manage textbooks, while faculty members can create course instances based on these textbooks. Courses are either "active," which allow student enrollment and can include teaching assistants (TAs), or "evaluation," which do not have enrollment, TAs, or a unique access code. Faculty and TAs can also customize course content by hiding sections, adding new content, and renumbering sections to ensure coherent flow for students. Customizations, however, respect hierarchical restrictions: faculty cannot alter the base textbook content added by admins, and TAs cannot modify faculty entries.
+
+The application supports four primary user roles: admin, faculty, student, and TA. Admins manage textbooks and course creation, faculty handle course enrollments and content modifications, TAs assist faculty in content management, and students access course content and participate in interactive activities. Students can view content sequentially, attempt quizzes associated with sections, and earn participation points based on their performance. The system maintains a flexible content numbering scheme to accommodate dynamic changes. Faculty and students can also view notification messages stored in a database, and students can monitor their participation points against the total possible score for each course. This structure ensures an organized and customizable e-learning experience, promoting user engagement through an interactive textbook model.
+
+
 # Common Commands
 - Run migrations: `python manage.py migrate`
 - Create a superuser: `python manage.py createsuperuser`
@@ -64,10 +70,3 @@ The development server should now be accessible at `http://127.0.0.1:8000`.
 3. Make your changes and commit them: git commit -m 'Add feature'.
 4. Push to the branch: git push origin feature/your-feature-name.
 5. Submit a pull request.
-
-# Licence
-
-### Additions Explained:
-
-- **API Documentation**: Includes instructions for linking Postman API documentation.
-  [Postman](https://www.postman.com/oodd33/workspace/rems-workspace/collection/17032297-c99120d4-22ab-44ef-bd19-b68e3cd1683f?action=share&creator=17032297) This final version should provide a comprehensive guide for setting up, understanding, and working with the project.
