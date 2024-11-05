@@ -185,3 +185,12 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.user_id} - {self.message[:20]}"
+    
+class Student(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    course_id = models.ForeignKey(Course,on_delete=models.CASCADE,default="x")
+    total_activities = models.PositiveIntegerField(default=0)
+    total_points = models.PositiveIntegerField(default=0)
+    activity_status = models.JSONField(default=list)  # This field will store an array
+    class Meta:
+        unique_together = ('course_id', 'user')
