@@ -1360,7 +1360,7 @@ def create_ta(request):
             ta.save()
 
             course = Course.objects.filter(course_id = course_id).first()
-            print(course.course_id,course.ta)
+            
             course.ta = new_user
             course.save()
 
@@ -1583,12 +1583,10 @@ def student_activity_points(request):
             Prefetch('content__textbook')
         )
     
-    print(activities)
     # Update total_activities in student record
     student.total_activities = activities.count()
     student.save()
 
-    print(student.activity_status,activity_number)
     # Check if the activity_id is already completed in activity_status
     if activity_number not in student.activity_status and activity_completed:
         student.activity_status.append(activity_number)
