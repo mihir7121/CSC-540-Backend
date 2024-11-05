@@ -491,6 +491,8 @@ def content(request, content_name):
         content = Content.objects.get(content_name=content_name, section=section, chapter=chapter, textbook=textbook)
         
         if request.method == "GET":
+            activities = Activity.objects.filter(content=content).values("activity_id", "activity_number", "content", "question", "hidden")
+
             return JsonResponse({
                 "content_id": content.content_id,
                 "content_name": content.content_name,
@@ -500,7 +502,8 @@ def content(request, content_name):
                 "section_number": content.section.number,
                 "chapter_name": content.chapter.chapter_name,
                 "textbook_id": content.textbook.textbook_id,
-                "hidden": content.hidden
+                "hidden": content.hidden,
+                "activity": list(activities)
             }, status=200)
         
         elif request.method == "PUT":            
@@ -681,11 +684,13 @@ def activity(request, activity_number):
         if request.method == "GET":
             try:
                 activity = Activity.objects.get(activity_number=activity_number, content=content)
+                questions = Question.objects.filter(question_id=activity.question.question_id)
                 data = {
                     "activity_id": activity.activity_id,
                     "content_name": activity.content.content_name,
                     "question_id": activity.question.question_id if activity.question else None,
-                    "hidden": activity.hidden
+                    "hidden": activity.hidden,
+                    "question": list(questions)
                 }
                 return JsonResponse(data, status=200)
             
