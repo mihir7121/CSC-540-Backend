@@ -70,4 +70,4 @@ The development server should now be accessible at `http://127.0.0.1:8000`.
 ### Additions Explained:
 
 - **API Documentation**: Includes instructions for linking Postman API documentation.
-  [<Postman>](https://www.postman.com/oodd33/workspace/rems-workspace/collection/17032297-c99120d4-22ab-44ef-bd19-b68e3cd1683f?action=share&creator=17032297). This final version should provide a comprehensive guide for setting up, understanding, and working with the project.
+  [Postman](https://www.postman.com/oodd33/workspace/rems-workspace/collection/17032297-c99120d4-22ab-44ef-bd19-b68e3cd1683f?action=share&creator=17032297) This final version should provide a comprehensive guide for setting up, understanding, and working with the project.
