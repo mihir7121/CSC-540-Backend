@@ -876,7 +876,6 @@ def landing(request):
     html = "<html><body>It is now %s.</body></html>" % now
     return HttpResponse(html)
 
-    
 # ===========================
 # Courses APIs
 # ===========================
@@ -1385,26 +1384,27 @@ def change_password(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            first_name = data.get('firstname')
-            last_name = data.get('lastname')
-            email_id = data.get('email')
-            course_token = data.get('courseToke')
+            current_password = data.get("current_password")
+            new_password = data.get("new_password")
+            user_id = request.COOKIES.get("user_id")
         except json.JSONDecodeError as e:
             return JsonResponse({'error': 'Invalid JSON: ' + str(e)}, status=400)
-
-        old_password = data.get("old_password")
-        new_password = data.get("new_password")
-        user_id = request.COOKIES.get('user_id')
+        except Exception as e:
+            return JsonResponse({"details": str(e)}, status=400)
 
         # Fetch the user by user_id
+        if not User.objects.filter(user_id=user_id).exists():
+            return JsonResponse({"details": "The user does not exist"}, status=400)
+        
         user = User.objects.filter(user_id=user_id).first()
-        if user.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
 
+        if not check_password(current_password, user.password):
+            return JsonResponse({'error': 'Current password is incorrect.'}, status=400)
+        
         # Update the password
         user.password = make_password(new_password)  # Hash the new password
         user.save()
-        return JsonResponse({'success': 'Password Changed'}, status=200)
+        return JsonResponse({'success': 'Password Successfully Changed'}, status=200)
 
     return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
 
