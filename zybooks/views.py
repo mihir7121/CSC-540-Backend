@@ -11,7 +11,7 @@ from .models import User
 from .decorators import role_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-
+from django.db.models import Prefetch
 # Authentication
 @csrf_exempt
 def login(request):
@@ -1178,6 +1178,7 @@ def course_students(request, course_id):
 
         enrolled_students = Enrollment.objects.filter(course=course, status="enrolled")
 
+
         enrolled_students = [
             {
                 "student_id": enrollment.student.user_id,
@@ -1238,6 +1239,11 @@ def update_enrollment_status(request, course_id):
 
         enrollment.status = "enrolled"
         enrollment.save()
+
+        # put the enrolled student in the student Table
+        course = Course.objects.filter(course_id=course_id).first() 
+        new_student = Student(user=student,course_id=course)
+        new_student.save()
 
         return JsonResponse({
             "message": "Enrollment status updated to enrolled",
@@ -1516,4 +1522,80 @@ def get_course_details(request):
 
     # Return as JSON response
     return JsonResponse({"courses": courses_data}, safe=False)
-    return JsonResponse({"s":"dd"})
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def student_activity_points(request):
+    student_id = request.COOKIES.get('user_id')
+
+    try:
+        data = json.loads(request.body)
+        course_id = data.get('course_id')
+        activity_number = data.get('activity_number')
+        activity_completed = data.get('activity_completed')
+    except json.JSONDecodeError as e:
+        return JsonResponse({'error': 'Invalid JSON: ' + str(e)}, status=400)
+
+    # Retrieve the user and student objects
+    user = User.objects.filter(user_id=student_id).first()
+    if not user:
+        return JsonResponse({'error': 'User not found'}, status=404)
+    student = Student.objects.filter(user=user).first()
+    if not student:
+        return JsonResponse({'error': 'Student not found'}, status=404)
+
+    # Get total activities for the particular course
+    # total_activities = Activity.objects.filter(
+    #     content__chapter__course_id=course_id, hidden=False
+    # ).count()
+    course = Course.objects.filter(course_id=course_id)
+    textbooks = Textbook.objects.filter(course_id=course_id)
+    # Get all chapters for these textbooks
+    chapters = Chapter.objects.filter(textbook__in=textbooks)
+    
+    # Get all sections for these chapters
+    sections = Section.objects.filter(chapter__in=chapters)
+    
+    # Get all content blocks for these sections
+    
+    contents = Content.objects.filter(
+            section__in=sections,
+            hidden=False,
+            block_type='activities'  # Make sure we're only getting activity content blocks
+        )
+    content_count = contents.count()
+
+    # Finally, get all activities linked to these content blocks
+    activities = Activity.objects.filter(
+            content__in=contents,
+            hidden=False
+        ).select_related(
+            'content',
+            'question'
+        ).prefetch_related(
+            Prefetch('content__section'),
+            Prefetch('content__chapter'),
+            Prefetch('content__textbook')
+        )
+    
+    print(activities)
+    # Update total_activities in student record
+    student.total_activities = activities.count()
+    student.save()
+
+    print(student.activity_status,activity_number)
+    # Check if the activity_id is already completed in activity_status
+    if activity_number not in student.activity_status and activity_completed:
+        student.activity_status.append(activity_number)
+        student.total_points += 1
+        student.save()
+
+    # Return all fields of the student in the JSON response
+    response_data = {
+        'user_id': student.user.user_id,
+        'course_id': course_id,
+        'total_activities': student.total_activities,
+        'total_points': student.total_points,
+    }
+
+    return JsonResponse(response_data, status=200)
