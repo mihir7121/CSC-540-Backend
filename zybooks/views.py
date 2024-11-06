@@ -339,7 +339,6 @@ def read_section(request):
         return JsonResponse({"detail": str(e)}, status=500)
 
 @csrf_exempt
-@role_required(['admin', 'faculty'])
 @require_http_methods(["GET", "PUT", "DELETE"])
 def section(request, number):
     data = json.loads(request.body)
@@ -473,7 +472,6 @@ def read_content(request):
         return JsonResponse({"detail": str(e)}, status=500)
 
 @csrf_exempt
-@role_required(['admin', 'faculty'])
 @require_http_methods(["GET", "PUT", "DELETE"])
 def content(request, content_name):
     try:
@@ -1405,7 +1403,6 @@ def change_password(request):
         user.password = make_password(new_password)  # Hash the new password
         user.save()
         return JsonResponse({'success': 'Password Successfully Changed'}, status=200)
-
     return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
 
 # =============
@@ -1550,9 +1547,6 @@ def student_activity_points(request):
         return JsonResponse({'error': 'Student not found'}, status=404)
 
     # Get total activities for the particular course
-    # total_activities = Activity.objects.filter(
-    #     content__chapter__course_id=course_id, hidden=False
-    # ).count()
     course = Course.objects.filter(course_id=course_id)
     textbooks = Textbook.objects.filter(course_id=course_id)
     # Get all chapters for these textbooks
@@ -1592,7 +1586,7 @@ def student_activity_points(request):
         student.activity_status.append(activity_number)
         student.total_points += 1
         student.save()
-
+    
     # Return all fields of the student in the JSON response
     response_data = {
         'user_id': student.user.user_id,

@@ -8,12 +8,12 @@ class CookieAuthenticationMiddleware(MiddlewareMixin):
         if re.match(r'^/admin/', request.path):
             return 
         
-        username = request.COOKIES.get('username')
+        username = request.COOKIES.get('user_id')
         role = request.COOKIES.get('role')
 
         if username and role:
             try:
-                user = User.objects.get(username=username, role=role)
+                user = User.objects.get(user_id=username, role=role)
                 request.user = user  # Attach the user to the request
             except User.DoesNotExist:
                 request.user = None
