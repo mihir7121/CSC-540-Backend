@@ -58,7 +58,7 @@ The application supports four primary user roles: admin, faculty, student, and T
 # Common Commands
 - Run migrations: `python manage.py migrate`
 - Create a superuser: `python manage.py createsuperuser`
-- Run migrations: `python manage.py makemigrations` and `python manage.py migrate`
+- Make migrations: `python manage.py makemigrations`
 - Check tables: `python manage.py inspectdb`
 
 # API Documentation
