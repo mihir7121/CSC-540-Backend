@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 from datetime import datetime
-# Create your models here.
 
 class User(models.Model):
     ROLE_CHOICES = [
@@ -63,7 +62,8 @@ class Course(models.Model):
     course_capacity = models.PositiveIntegerField(null=True) 
     faculty = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="course_faculty")
     ta = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="course_ta")
-    textbook = models.ForeignKey(Textbook, on_delete=models.SET_NULL, null=False, default=101)
+    textbook = models.ForeignKey(Textbook, on_delete=models.SET_NULL, null=True, default=101)
+    
     def __str__(self):
         return f"{self.course_id} - {self.course_name}"
 
@@ -192,10 +192,6 @@ class Student(models.Model):
     total_points = models.PositiveIntegerField(default=0)
     class Meta:
         unique_together = ('course_id', 'user')
-
-
-from django.db import models
-from datetime import datetime
 
 class StudentPoints(models.Model):
     student_id = models.ForeignKey(Student, on_delete=models.CASCADE)

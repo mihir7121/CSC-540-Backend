@@ -101,8 +101,7 @@ def create_textbook(request):
     textbook.save()
     return JsonResponse({
         "textbook_id": textbook.textbook_id,
-        "title": textbook.title,
-        "course_id": textbook.course_id
+        "title": textbook.title
     }, status=201)
 
 @csrf_exempt
@@ -112,8 +111,7 @@ def read_textbooks(request):
     textbooks = Textbook.objects.all()
     textbooks_list = [{
         "textbook_id": textbook.textbook_id,
-        "title": textbook.title,
-        "course_id": textbook.course_id
+        "title": textbook.title
     } for textbook in textbooks]
     return JsonResponse(textbooks_list, status=200, safe=False)
 
@@ -134,14 +132,12 @@ def textbook(request, textbook_id):
         return JsonResponse({
             "textbook_id": textbook.textbook_id,
             "title": textbook.title,
-            "course_id": textbook.course.course_id,
             "chapters": list(chapters)
         }, status=200)
     
     elif request.method == "PUT":
         data = json.loads(request.body)
         updated_title = data.get("title")
-        course_id = data.get("course_id")
 
         try:
             textbook = Textbook.objects.get(textbook_id=textbook_id)
@@ -149,12 +145,10 @@ def textbook(request, textbook_id):
             return JsonResponse({"detail": "Textbook not found"}, status=404)
 
         textbook.title = updated_title
-        textbook.course_id = course_id
         textbook.save()
         return JsonResponse({
             "textbook_id": textbook.textbook_id,
             "title": textbook.title,
-            "course_id": textbook.course_id
         }, status=200)
     
     elif request.method == "DELETE":
@@ -944,14 +938,13 @@ def create_course(request):
             course_capacity=course_capacity,
             start_date=start_date,
             end_date=end_date,
+            textbook=textbook,
             faculty=faculty,
             ta=ta
         )
-        textbook.course = course
         
         # Save the course instance
         course.save()
-        textbook.save()
 
         # Return response with course details
         return JsonResponse({
@@ -962,6 +955,7 @@ def create_course(request):
             "end_date": course.end_date,
             "course_type": course.course_type,
             "course_capacity": course.course_capacity,
+            "textbook": course.textbook.textbook_id,
             "faculty": course.faculty.user_id,
             "ta": course.ta.user_id if course.ta else None
         }, status=201)
@@ -986,12 +980,12 @@ def read_courses(request):
         if user.role == 'faculty':
             courses = Course.objects.filter(faculty=user).values(
                 "course_id", "course_token", "course_name", "start_date", 
-                "end_date", "course_type", "course_capacity", "faculty", "ta"
+                "end_date", "course_type", "course_capacity", "textbook", "faculty", "ta"
             )
         elif user.role == 'ta':
             courses = Course.objects.filter(ta=user).values(
                 "course_id", "course_token", "course_name", "start_date", 
-                "end_date", "course_type", "course_capacity", "faculty", "ta"
+                "end_date", "course_type", "course_capacity", "textbook", "faculty", "ta"
             )
         else:
             return JsonResponse({"detail": "User does not have permission to view courses"}, status=403)
@@ -1009,7 +1003,7 @@ def course(request, course_id):
         try:
             course = Course.objects.filter(course_id=course_id).values(
                 "course_id", "course_token", "course_name", "start_date", 
-                "end_date", "course_type", "course_capacity", 
+                "end_date", "course_type", "course_capacity", "textbook"
                 "faculty", "ta"
             ).first()
             
@@ -1459,7 +1453,7 @@ def get_course_details(request):
             "textbooks": []
         }
 
-        textbooks = Textbook.objects.filter(course=course)
+        textbooks = Textbook.objects.filter(textbook_id=course.textbook.textbook_id)
         for textbook in textbooks:
             textbook_data = {
                 "textbook_id": textbook.textbook_id,
