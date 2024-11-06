@@ -1449,7 +1449,7 @@ def get_course_details(request):
             "start_date": course.start_date,
             "end_date": course.end_date,
             "faculty": course.faculty.user_id,
-            "ta": course.ta.user_id,
+            "ta": course.ta.user_id if course.ta else None,
             "textbooks": []
         }
 
