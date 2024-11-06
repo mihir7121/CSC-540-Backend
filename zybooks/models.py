@@ -42,6 +42,12 @@ class TA(models.Model):
     def __str__(self):
         return f"{self.ta.first_name} {self.ta.last_name} - TA for {self.associated_faculty.last_name}"
 
+class Textbook(models.Model):
+    textbook_id = models.PositiveIntegerField(primary_key=True)
+    title = models.CharField(max_length=100)
+    def __str__(self):
+        return self.title
+    
 class Course(models.Model):
     TYPE_CHOICES = [
         ('active', 'Active'),
@@ -57,7 +63,7 @@ class Course(models.Model):
     course_capacity = models.PositiveIntegerField(null=True) 
     faculty = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="course_faculty")
     ta = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="course_ta")
-
+    textbook = models.ForeignKey(Textbook, on_delete=models.SET_NULL, null=False, default=101)
     def __str__(self):
         return f"{self.course_id} - {self.course_name}"
 
@@ -76,13 +82,6 @@ class Enrollment(models.Model):
 
     def __str__(self):
         return f"{self.student.first_name}-{self.student.last_name}-{self.course.course_id}-{self.status}"
-
-class Textbook(models.Model):
-    textbook_id = models.PositiveIntegerField(primary_key=True)
-    title = models.CharField(max_length=100)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True)
-    def __str__(self):
-        return self.title
 
 class Chapter(models.Model):
     chapter_id = models.AutoField(primary_key=True)
