@@ -11,7 +11,8 @@ from .models import User
 from .decorators import role_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Sum, Count
+
 # Authentication
 @csrf_exempt
 def login(request):
@@ -1525,74 +1526,93 @@ def get_course_details(request):
     # Return as JSON response
     return JsonResponse({"courses": courses_data}, safe=False)
 
+# @csrf_exempt
+# def student_participation_summary(request):
+#     # Retrieve the student and aggregate data per course
+#     student = Student.objects.get(student_id=request.COOKIES.get('user_id'))
+
+#     # Aggregate participation data by course
+#     participation_data = (
+#         StudentPoints.objects.filter(student=student)
+#         .values('course__course_id')
+#         .annotate(
+#             total_points=Sum('point'),  # Total points per course
+#             finished_activities=Count('unique_activity_id', distinct=True)  # Unique activities completed
+#         )
+#     )
+
+#     # Format the response data
+#     data = {
+#         "student_id": student,
+#         "courses": [
+#             {
+#                 "course_id": entry['course__course_id'],
+#                 "total_points": entry['total_points'],
+#                 "finished_activities": entry['finished_activities']
+#             }
+#             for entry in participation_data
+#         ]
+#     }
+#     return JsonResponse({"status": "success", "data": data})
+
 @csrf_exempt
-@require_http_methods(["GET", "POST"])
-def student_activity_points(request):
-    student_id = request.COOKIES.get('user_id')
-
-    try:
+def submit_activity(request):
+    if request.method == 'POST':
         data = json.loads(request.body)
-        course_id = data.get('course_id')
-        activity_number = data.get('activity_number')
-        activity_completed = data.get('activity_completed')
-    except json.JSONDecodeError as e:
-        return JsonResponse({'error': 'Invalid JSON: ' + str(e)}, status=400)
+        
+        # Fetch the student from the user_id stored in cookies (Assuming authenticated user is the student)
+        course = Course.objects.get(course_id=data['course_id'])
+        textbook = Textbook.objects.get(textbook_id=data['textbook_id'])
+        chapter = Chapter.objects.get(chapter_name=data['chapter_id'])
+        section = Section.objects.get(number=data['section_id'])
+        content = Content.objects.get(content_name=data['content_id'])
+        student = Student.objects.get(user=request.COOKIES.get('user_id'),course_id=course)
 
-    # Retrieve the user and student objects
-    user = User.objects.filter(user_id=student_id).first()
-    if not user:
-        return JsonResponse({'error': 'User not found'}, status=404)
-    student = Student.objects.filter(user=user).first()
-    if not student:
-        return JsonResponse({'error': 'Student not found'}, status=404)
+        total_points = 0
+        total_activities = 0
+        for activity_data in data['activities']:
+            activity = Activity.objects.get(activity_number=activity_data['activity_number'], content=content)
+            
+            for question_data in activity_data['questions']:
+                question = Question.objects.get(question_id=question_data['question_id'])
+                option_selected = question_data['option_selected']
+                correct_ans = question_data['correct_ans']
+                
+                # Calculate points based on answer correctness
+                point = 1 if option_selected == correct_ans else 0
 
-    # Get total activities for the particular course
-    course = Course.objects.filter(course_id=course_id)
-    textbooks = Textbook.objects.filter(course_id=course_id)
-    # Get all chapters for these textbooks
-    chapters = Chapter.objects.filter(textbook__in=textbooks)
-    
-    # Get all sections for these chapters
-    sections = Section.objects.filter(chapter__in=chapters)
-    
-    # Get all content blocks for these sections
-    
-    contents = Content.objects.filter(
-            section__in=sections,
-            hidden=False,
-            block_type='activities'  # Make sure we're only getting activity content blocks
-        )
-    content_count = contents.count()
-
-    # Finally, get all activities linked to these content blocks
-    activities = Activity.objects.filter(
-            content__in=contents,
-            hidden=False
-        ).select_related(
-            'content',
-            'question'
-        ).prefetch_related(
-            Prefetch('content__section'),
-            Prefetch('content__chapter'),
-            Prefetch('content__textbook')
-        )
-    
-    # Update total_activities in student record
-    student.total_activities = activities.count()
-    student.save()
-
-    # Check if the activity_id is already completed in activity_status
-    if activity_number not in student.activity_status and activity_completed:
-        student.activity_status.append(activity_number)
-        student.total_points += 1
+                # Check if a record already exists for this unique combination
+                if not StudentPoints.objects.filter(
+                    student_id=student,
+                    course_id=course,
+                    textbook_id=textbook,
+                    chapter_id=chapter,
+                    section_id=section,
+                    block_id=content,
+                    unique_activity_id=activity,
+                    question_id=question
+                ).exists():
+                    # Create the StudentPoints entry if it doesn't exist
+                    StudentPoints.objects.create(
+                        student_id=student,
+                        course_id=course,
+                        textbook_id=textbook,
+                        chapter_id=chapter,
+                        section_id=section,
+                        block_id=content,
+                        unique_activity_id=activity,
+                        question_id=question,
+                        point=point,
+                        timestamp=timezone.now()
+                    )
+                    total_points += point
+                    total_activities += 1
+                else:
+                    return JsonResponse({'status': 'success', 'message': 'Results were previously submitted'})
+        
+        student.total_points += total_points
+        student.total_activities += total_activities
         student.save()
+        return JsonResponse({'status': 'success', 'message': 'Activity submitted successfully'})
     
-    # Return all fields of the student in the JSON response
-    response_data = {
-        'user_id': student.user.user_id,
-        'course_id': course_id,
-        'total_activities': student.total_activities,
-        'total_points': student.total_points,
-    }
-
-    return JsonResponse(response_data, status=200)
+    return JsonResponse({'status': 'failure', 'message': 'Invalid request method'}, status=400)

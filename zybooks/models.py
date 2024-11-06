@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-
+from datetime import datetime
 # Create your models here.
 
 class User(models.Model):
@@ -190,6 +190,28 @@ class Student(models.Model):
     course_id = models.ForeignKey(Course,on_delete=models.CASCADE,default="x")
     total_activities = models.PositiveIntegerField(default=0)
     total_points = models.PositiveIntegerField(default=0)
-    activity_status = models.JSONField(default=list)  # This field will store an array
     class Meta:
         unique_together = ('course_id', 'user')
+
+
+from django.db import models
+from datetime import datetime
+
+class StudentPoints(models.Model):
+    student_id = models.ForeignKey(Student, on_delete=models.CASCADE)
+    course_id = models.ForeignKey(Course, on_delete=models.CASCADE)
+    textbook_id = models.ForeignKey(Textbook, on_delete=models.CASCADE)
+    chapter_id = models.ForeignKey(Chapter, on_delete=models.CASCADE)
+    section_id = models.ForeignKey(Section, on_delete=models.CASCADE)
+    block_id = models.ForeignKey(Content, on_delete=models.CASCADE)
+    unique_activity_id = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    question_id = models.ForeignKey(Question, on_delete=models.CASCADE)
+    point = models.IntegerField(default=0)
+    timestamp = models.DateTimeField(default=datetime.now)
+
+    class Meta:
+        unique_together = ('student_id', 'course_id', 'textbook_id', 'chapter_id', 'section_id', 'block_id', 'unique_activity_id', 'question_id')
+
+    def __str__(self):
+        return f"{self.student_id} - {self.course_id} - {self.question_id}"
+
