@@ -1561,12 +1561,12 @@ def submit_activity(request):
         data = json.loads(request.body)
         
         # Fetch the student from the user_id stored in cookies (Assuming authenticated user is the student)
-        student = Student.objects.get(user=request.COOKIES.get('user_id'))
         course = Course.objects.get(course_id=data['course_id'])
         textbook = Textbook.objects.get(textbook_id=data['textbook_id'])
         chapter = Chapter.objects.get(chapter_name=data['chapter_id'])
         section = Section.objects.get(number=data['section_id'])
         content = Content.objects.get(content_name=data['content_id'])
+        student = Student.objects.get(user=request.COOKIES.get('user_id'),course_id=course)
 
         total_points = 0
         total_activities = 0
