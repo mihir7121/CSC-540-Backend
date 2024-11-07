@@ -1556,26 +1556,34 @@ def submit_activity(request):
         # Fetch the student from the user_id stored in cookies (Assuming authenticated user is the student)
         course = Course.objects.get(course_id=data['course_id'])
         textbook = Textbook.objects.get(textbook_id=data['textbook_id'])
-        chapter = Chapter.objects.get(chapter_name=data['chapter_id'])
-        section = Section.objects.get(number=data['section_id'])
-        content = Content.objects.get(content_name=data['content_id'])
+        chapter = Chapter.objects.get(chapter_name=data['chapter_id'],textbook=textbook)
+        section = Section.objects.get(number=data['section_id'],chapter=chapter,textbook=textbook)
+        content = Content.objects.get(content_name=data['content_id'],section=section,chapter=chapter,textbook=textbook)
         student = Student.objects.get(user=request.COOKIES.get('user_id'),course_id=course)
 
         total_points = 0
         total_activities = 0
         for activity_data in data['activities']:
-            activity = Activity.objects.get(activity_number=activity_data['activity_number'], content=content)
-            
-            for question_data in activity_data['questions']:
-                question = Question.objects.get(question_id=question_data['question_id'])
-                option_selected = question_data['option_selected']
-                correct_ans = question_data['correct_ans']
+            activity = Activity.objects.get(question=activity_data["question_id"],activity_number=activity_data['activity_number'], content=content)
+            option_selected = activity_data['option_selected']
+            correct_ans = activity_data['correct_ans']
                 
                 # Calculate points based on answer correctness
-                point = 1 if option_selected == correct_ans else 0
+            point = 1 if option_selected == correct_ans else 0
 
-                # Check if a record already exists for this unique combination
-                if not StudentPoints.objects.filter(
+            # Check if a record already exists for this unique combination
+            if not StudentPoints.objects.filter(
+                student_id=student,
+                course_id=course,
+                textbook_id=textbook,
+                chapter_id=chapter,
+                section_id=section,
+                block_id=content,
+                unique_activity_id=activity,
+                question_id=Question.objects.get(question_id=activity_data["question_id"]),
+            ).exists():
+                # Create the StudentPoints entry if it doesn't exist
+                StudentPoints.objects.create(
                     student_id=student,
                     course_id=course,
                     textbook_id=textbook,
@@ -1583,25 +1591,14 @@ def submit_activity(request):
                     section_id=section,
                     block_id=content,
                     unique_activity_id=activity,
-                    question_id=question
-                ).exists():
-                    # Create the StudentPoints entry if it doesn't exist
-                    StudentPoints.objects.create(
-                        student_id=student,
-                        course_id=course,
-                        textbook_id=textbook,
-                        chapter_id=chapter,
-                        section_id=section,
-                        block_id=content,
-                        unique_activity_id=activity,
-                        question_id=question,
-                        point=point,
-                        timestamp=timezone.now()
-                    )
-                    total_points += point
-                    total_activities += 1
-                else:
-                    return JsonResponse({'status': 'success', 'message': 'Results were previously submitted'})
+                    question_id=Question.objects.get(question_id=activity_data["question_id"]),
+                    point=point,
+                    timestamp=timezone.now()
+                )
+                total_points += point
+                total_activities += 1
+            else:
+                return JsonResponse({'status': 'success', 'message': 'Results were previously submitted'})
         
         student.total_points += total_points
         student.total_activities += total_activities
