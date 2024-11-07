@@ -47,8 +47,11 @@ urlpatterns = [
     path('createfaculty/', views.create_faculty, name='create_faculty'),
     path('createta/',views.create_ta,name='create_ta'), # create TA
     path('changepassword/',views.change_password,name="change_password"),
+
     path('students/all/',views.all_students,name="all_students"),
     path('students/home/',views.get_course_details,name='student_home'),
     path('students/points/',views.total_points,name='student-report-card'),
-    path('students/submit_activity/',views.submit_activity,name="activity-points")
+    path('students/submit_activity/',views.submit_activity,name="activity-points"),
+
+    path('query/', views.query, name="query")
 ]

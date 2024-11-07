@@ -1,6 +1,4 @@
-from rest_framework.views import APIView
 from . models import *
-from rest_framework.response import Response 
 from . serializer import *
 from django.http import HttpResponse
 import datetime
@@ -12,6 +10,7 @@ from .decorators import role_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.db.models import Prefetch, Sum, Count
+from django.db import connection
 
 # Authentication
 @csrf_exempt
@@ -1635,3 +1634,136 @@ def total_points(request):
 
         # Return the data as JSON
         return JsonResponse(result, safe=False)
+
+
+@csrf_exempt 
+def query(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        query_number = data.get("query_number")
+
+        # Define the queries
+        queries = {
+            1: """
+                SELECT COUNT(s.section_id) AS section_count, c.chapter_name AS First_Chapter, c.textbook_id AS Given_Textbook_ID
+                FROM zybooks_chapter c
+                JOIN zybooks_section s ON c.chapter_id = s.chapter_id
+                WHERE c.textbook_id = 101
+                    AND c.chapter_name = (
+                        SELECT MIN(chapter_name)
+                        FROM zybooks_chapter
+                        WHERE textbook_id = 101
+                    );
+            """,
+            2: """
+                SELECT 
+                    u_faculty.first_name AS first_name,
+                    u_faculty.last_name AS last_name,
+                    'faculty' AS role,
+                    c.course_name AS course_name,
+                    c.course_id AS course_id
+                FROM zybooks_course c
+                JOIN zybooks_user u_faculty ON c.faculty_id = u_faculty.user_id
+
+                UNION ALL
+
+                SELECT 
+                    u_ta.first_name AS first_name,
+                    u_ta.last_name AS last_name,
+                    'ta' AS role,
+                    c.course_name AS course_name,
+                    c.course_id AS course_id
+                FROM zybooks_course c
+                JOIN zybooks_user u_ta ON c.ta_id = u_ta.user_id;
+            """,
+            3: """
+                SELECT 
+                    c.course_id,
+                    u.first_name || ' ' || u.last_name AS faculty_name,
+                    COUNT(e.student_id) AS total_students
+                FROM zybooks_course c
+                JOIN zybooks_user u ON c.faculty_id = u.user_id
+                LEFT JOIN zybooks_enrollment e ON c.course_id = e.course_id
+                WHERE c.course_type = 'active'
+                GROUP BY c.course_id, faculty_name;
+            """,
+            4: """
+                SELECT 
+                    e.course_id,
+                    COUNT(e.student_id) AS total_waitlist_count
+                FROM zybooks_enrollment e
+                WHERE e.status = 'pending'
+                GROUP BY e.course_id
+                ORDER BY total_waitlist_count DESC
+                LIMIT 1;
+            """,
+            5: """
+                SELECT 
+                    c.content_id,
+                    c.content_name,
+                    c.block_type,
+                    c.text_data,
+                    c.image_data,
+                    s.number AS section_number,
+                    s.title AS section_title
+                FROM zybooks_chapter ch
+                JOIN zybooks_section s ON ch.chapter_id = s.chapter_id
+                JOIN zybooks_content c ON s.section_id = c.section_id
+                WHERE ch.chapter_name = 'chap02' 
+                  AND ch.textbook_id = 101
+                ORDER BY s.number, c.content_id;
+            """,
+            6: """
+                SELECT DISTINCT
+                    q.option_1_text AS incorrect_option_1,
+                    q.option_1_explanation AS explanation_1,
+                    q.option_3_text AS incorrect_option_3,
+                    q.option_3_explanation AS explanation_3,
+                    q.option_4_text AS incorrect_option_4,
+                    q.option_4_explanation AS explanation_4
+                FROM zybooks_textbook t
+                JOIN zybooks_chapter ch ON t.textbook_id = ch.textbook_id
+                JOIN zybooks_section s ON ch.chapter_id = s.chapter_id
+                JOIN zybooks_content c ON s.section_id = c.section_id
+                JOIN zybooks_activity a ON c.content_id = a.content_id
+                JOIN zybooks_question q ON a.question_id = q.question_id
+                WHERE t.textbook_id = 101
+                  AND ch.chapter_name = 'chap01'
+                  AND s.number = 'Sec02'
+                  AND a.activity_number = 'ACT0'
+                  AND q.question_name = 'Q2';
+            """,
+            7: """
+                SELECT DISTINCT t.textbook_id, t.title
+                FROM zybooks_textbook t
+                JOIN zybooks_course c1 ON t.textbook_id = c1.textbook_id
+                JOIN zybooks_user u1 ON c1.faculty_id = u1.user_id
+                JOIN zybooks_course c2 ON t.textbook_id = c2.textbook_id
+                JOIN zybooks_user u2 ON c2.faculty_id = u2.user_id
+                WHERE c1.course_type = 'active'
+                  AND c2.course_type = 'evaluation'
+                  AND u1.user_id != u2.user_id;
+            """
+        }
+
+        try:
+            # Get the SQL query based on the query_number
+            sql_query = queries.get(query_number)
+
+            if sql_query is None:
+                return JsonResponse({'error': 'Invalid query number'}, status=400)
+
+            # Execute the query using Django's database connection
+            with connection.cursor() as cursor:
+                cursor.execute(sql_query)
+                # Fetch all results
+                results = [dict(zip([col[0] for col in cursor.description], row))
+                           for row in cursor.fetchall()]
+
+            # Return the results as JSON response
+            return JsonResponse({'results': results})
+
+        except Exception as error:
+            return JsonResponse({'error': str(error)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
