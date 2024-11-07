@@ -6,7 +6,7 @@ from django.http import HttpResponse
 import datetime
 import json
 from django.http import JsonResponse
-from django.contrib.auth.hashers import check_password, make_password, verify_password
+from django.contrib.auth.hashers import check_password, make_password
 from .models import User
 from .decorators import role_required
 from django.views.decorators.csrf import csrf_exempt
