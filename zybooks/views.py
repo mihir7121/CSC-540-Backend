@@ -1606,3 +1606,32 @@ def submit_activity(request):
         return JsonResponse({'status': 'success', 'message': 'Activity submitted successfully'})
     
     return JsonResponse({'status': 'failure', 'message': 'Invalid request method'}, status=400)
+
+@csrf_exempt
+def total_points(request):
+    if request.method == "GET":
+        user_id = request.COOKIES.get('user_id')
+        
+        # Check if user_id is in cookies
+        if not user_id:
+            return JsonResponse({'error': 'User ID not found in cookies'}, status=400)
+        
+        # Get all Student records for the specified user_id
+        student_records = Student.objects.filter(user_id=user_id)
+        
+        # Check if there are any records for this user
+        if not student_records.exists():
+            return JsonResponse({'error': 'No records found for this user'}, status=404)
+
+        # Prepare the result data
+        result = [
+            {
+                'course_id': student.course_id.course_id,  # or `student.course_id.course_name` if you want the course name
+                'total_activities': student.total_activities,
+                'total_points': student.total_points
+            }
+            for student in student_records
+        ]
+
+        # Return the data as JSON
+        return JsonResponse(result, safe=False)

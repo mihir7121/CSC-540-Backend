@@ -49,5 +49,6 @@ urlpatterns = [
     path('changepassword/',views.change_password,name="change_password"),
     path('students/all/',views.all_students,name="all_students"),
     path('students/home/',views.get_course_details,name='student_home'),
+    path('students/points/',views.total_points,name='student-report-card'),
     path('students/submit_activity/',views.submit_activity,name="activity-points")
 ]
