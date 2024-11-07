@@ -29,13 +29,19 @@ source venv/bin/activate   # On Windows use `venv\Scripts\activate`
 pip install -r requirements.txt
 ```
 
-4. **Apply migrations**
+4. **Add .env file**
+```bash
+SECRET_KEY = "SECRETKEY"
+DEBUG=True
+```
+
+5. **Apply migrations**
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-5. **Run the server**
+6. **Run the server**
 ```bash
 python manage.py runserver
 ```
