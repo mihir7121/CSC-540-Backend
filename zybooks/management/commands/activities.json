@@ -1,0 +1,26 @@
+[
+    {
+        "textbook": 101,
+        "chapter": "chap01",
+        "section": "Sec02",
+        "content_name": "Block01",
+        "activity_number": "ACT0",
+        "hidden": false
+    },
+    {
+        "textbook": 102,
+        "chapter": "chap01",
+        "section": "Sec02",
+        "content_name": "Block01",
+        "activity_number": "ACT0",
+        "hidden": false
+    },
+    {
+        "textbook": 103,
+        "chapter": "chap01",
+        "section": "Sec02",
+        "content_name": "Block01",
+        "activity_number": "ACT0",
+        "hidden": false
+    }
+]

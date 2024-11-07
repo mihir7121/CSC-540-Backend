@@ -16,7 +16,6 @@ class User(models.Model):
     email = models.EmailField(unique=True, null=False)
     password = models.CharField(max_length=128)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
-    
     creation_date = models.DateTimeField(default=timezone.now, null = False)
     
     USERNAME_FIELD = 'user_id'
@@ -143,6 +142,9 @@ class Content(models.Model):
             self.text_data = None  # Clear text data for image blocks
 
         super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.content_name},{self.section.number},{self.chapter.chapter_name},{self.textbook.textbook_id}"
 
 class Question(models.Model):
     question_id = models.AutoField(primary_key=True)
@@ -177,6 +179,9 @@ class Activity(models.Model):
     question = models.ForeignKey(Question, on_delete=models.SET_NULL, blank=True, null=True)
     hidden = models.BooleanField()
 
+    def __str__(self):
+        return f"{self.activity_number} -- {self.question.question_text}"
+
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     message = models.TextField()
@@ -192,6 +197,9 @@ class Student(models.Model):
     total_points = models.PositiveIntegerField(default=0)
     class Meta:
         unique_together = ('course_id', 'user')
+
+    def __str__(self):
+        return f"{self.user} ---- enrolled for ----- {self.course_id}"
 
 class StudentPoints(models.Model):
     student_id = models.ForeignKey(Student, on_delete=models.CASCADE)

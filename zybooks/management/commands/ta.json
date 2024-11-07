@@ -1,0 +1,33 @@
+[
+    {
+      "ta_id": "JaWi1024",
+      "faculty_id": "KeOg1024",
+      "hourly_pay": 15.00,
+      "hours_per_week": 20
+    },
+    {
+      "ta_id": "LiAl0924",
+      "faculty_id": "KeOg1024",
+      "hourly_pay": 16.00,
+      "hours_per_week": 18
+    },
+    {
+      "ta_id": "DaJo1024",
+      "faculty_id": "SaMi1024",
+      "hourly_pay": 14.00,
+      "hours_per_week": 15
+    },
+    {
+      "ta_id": "ElCl1024",
+      "faculty_id": "SaMi1024",
+      "hourly_pay": 18.00,
+      "hours_per_week": 10
+    },
+    {
+      "ta_id": "JeGi0924",
+      "faculty_id": "KeOg1024",
+      "hourly_pay": 17.00,
+      "hours_per_week": 12
+    }
+  ]
+  

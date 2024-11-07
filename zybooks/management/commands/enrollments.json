@@ -1,0 +1,82 @@
+[
+    {
+        "student_id": "ErPe1024",
+        "course_id": "NCSUOganCSC440F24",
+        "status": "enrolled"
+    },
+    {
+        "student_id": "ErPe1024",
+        "course_id": "NCSUOganCSC540F24",
+        "status": "enrolled"
+    },
+    {
+        "student_id": "AlAr1024",
+        "course_id": "NCSUOganCSC440F24",
+        "status": "enrolled"
+    },
+    {
+        "student_id": "BoTe1024",
+        "course_id": "NCSUOganCSC440F24",
+        "status": "enrolled"
+    },
+    {
+        "student_id": "LiGa1024",
+        "course_id": "NCSUOganCSC440F24",
+        "status": "enrolled"
+    },
+    {
+        "student_id": "LiGa1024",
+        "course_id": "NCSUOganCSC540F24",
+        "status": "enrolled"
+    },
+    {
+        "student_id": "ArMo1024",
+        "course_id": "NCSUOganCSC540F24",
+        "status": "enrolled"
+    },
+    {
+        "student_id": "ArMo1024",
+        "course_id": "NCSUOganCSC440F24",
+        "status": "enrolled"
+    },
+    {
+        "student_id": "SiHa1024",
+        "course_id": "NCSUOganCSC440F24",
+        "status": "enrolled"
+    },
+    {
+        "student_id": "FiWi1024",
+        "course_id": "NCSUSaraCSC326F24",
+        "status": "enrolled"
+    },
+    {
+        "student_id": "LeMe1024",
+        "course_id": "NCSUOganCSC440F24",
+        "status": "enrolled"
+    },
+    {
+        "student_id": "FiWi1024",
+        "course_id": "NCSUOganCSC440F24",
+        "status": "pending"
+    },
+    {
+        "student_id": "LeMe1024",
+        "course_id": "NCSUOganCSC540F24",
+        "status": "pending"
+    },
+    {
+        "student_id": "AlAr1024",
+        "course_id": "NCSUOganCSC540F24",
+        "status": "pending"
+    },
+    {
+        "student_id": "SiHa1024",
+        "course_id": "NCSUOganCSC540F24",
+        "status": "pending"
+    },
+    {
+        "student_id": "FiWi1024",
+        "course_id": "NCSUOganCSC540F24",
+        "status": "pending"
+    }
+]

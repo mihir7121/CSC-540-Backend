@@ -8,7 +8,8 @@
         "faculty": "KeOg1024",
         "ta": "JaWi1024",
         "start_date": "2024-08-15",
-        "end_date": "2024-12-15"
+        "end_date": "2024-12-15",
+        "textbook":101
     },
     {
         "course_id": "NCSUOganCSC540F24",
@@ -19,7 +20,8 @@
         "faculty": "KeOg1024",
         "ta": "LiAl0924",
         "start_date": "2024-08-17",
-        "end_date": "2024-12-15"
+        "end_date": "2024-12-15",
+        "textbook":101
     },
     {
         "course_id": "NCSUSaraCSC326F24",
@@ -30,7 +32,8 @@
         "faculty": "SaMi1024",
         "ta": "DaJo1024",
         "start_date": "2024-08-23",
-        "end_date": "2024-10-23"
+        "end_date": "2024-10-23",
+        "textbook":102
     },
     {
         "course_id": "NCSUJegiCSC522F24",
@@ -41,7 +44,8 @@
         "faculty": "JoDo1024",
         "ta": null,
         "start_date": "2025-08-25",
-        "end_date": "2025-12-18"
+        "end_date": "2025-12-18",
+        "textbook":103
     },
 
     {
@@ -53,7 +57,8 @@
         "faculty": "SaMi1024",
         "ta": null,
         "start_date": "2025-08-27",
-        "end_date": "2025-12-19"
+        "end_date": "2025-12-19",
+        "textbook":102
     }
 ]
 

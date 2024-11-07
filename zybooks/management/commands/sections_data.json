@@ -1,0 +1,72 @@
+[
+    {
+        "number": "Sec01",
+        "title": "Database Management Systems (DBMS) Overview",
+        "chapter": "chap01",
+        "textbook": 101,
+        "hidden": false
+    },
+    {
+        "number": "Sec02",
+        "title": "Data Models and Schemas",
+        "chapter": "chap01",
+        "textbook": 101,
+        "hidden": false
+    },
+    {
+        "number": "Sec01",
+        "title": "Entities, Attributes, and Relationships",
+        "chapter": "chap02",
+        "textbook": 101,
+        "hidden": false
+    },
+    {
+        "number": "Sec02",
+        "title": "Normalization and Integrity Constraints",
+        "chapter": "chap02",
+        "textbook": 101,
+        "hidden": false
+    },
+    {
+        "number": "Sec01",
+        "title": "History and Evolution of Software Engineering",
+        "chapter": "chap01",
+        "textbook": 102,
+        "hidden": false
+    },
+    {
+        "number": "Sec02",
+        "title": "Key Principles of Software Engineering",
+        "chapter": "chap01",
+        "textbook": 102,
+        "hidden": false
+    },
+    {
+        "number": "Sec01",
+        "title": "Phases of the SDLC",
+        "chapter": "chap02",
+        "textbook": 102,
+        "hidden": true
+    },
+    {
+        "number": "Sec02",
+        "title": "Agile vs. Waterfall Models",
+        "chapter": "chap02",
+        "textbook": 102,
+        "hidden": false
+    },
+    {
+        "number": "Sec01",
+        "title": "Overview of Machine Learning",
+        "chapter": "chap01",
+        "textbook": 103,
+        "hidden": true
+    },
+    {
+        "number": "Sec02",
+        "title": "Supervised vs Unsupervised Learning",
+        "chapter": "chap01",
+        "textbook": 103,
+        "hidden": false
+    }
+]

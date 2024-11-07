@@ -6,7 +6,7 @@ from django.http import HttpResponse
 import datetime
 import json
 from django.http import JsonResponse
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import check_password, make_password, verify_password
 from .models import User
 from .decorators import role_required
 from django.views.decorators.csrf import csrf_exempt
@@ -20,11 +20,10 @@ def login(request):
         data = json.loads(request.body)
         user_id = data.get('user_id')
         password = data.get('password')
-
         user = User.objects.filter(user_id=user_id).first()
         if user:
-            # Verify password           
-            if check_password(password, user.password):
+            # Verify password 
+            if check_password(password, user.password) or (password == user.password):
                 response = JsonResponse({"message": "success"})
                 # Set cookie with user_id and role
                 response.set_cookie('user_id', user.user_id)
@@ -1391,7 +1390,7 @@ def change_password(request):
         
         user = User.objects.filter(user_id=user_id).first()
 
-        if not check_password(current_password, user.password):
+        if not (check_password(current_password, user.password) or user.password == current_password):
             return JsonResponse({'error': 'Current password is incorrect.'}, status=400)
         
         # Update the password
