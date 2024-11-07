@@ -29,7 +29,7 @@ source venv/bin/activate   # On Windows use `venv\Scripts\activate`
 pip install -r requirements.txt
 ```
 
-4. **Add .env file**
+4. **Add .env file in CSC540_Backend folder**
 ```bash
 SECRET_KEY = "SECRETKEY"
 DEBUG=True
