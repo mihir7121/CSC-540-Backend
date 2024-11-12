@@ -406,7 +406,7 @@ def section(request, number):
 # Content Block APIs
 # ===========================
 @csrf_exempt
-@role_required(['admin', 'faculty'])
+@role_required(['admin', 'faculty', 'ta'])
 @require_http_methods(["POST"])
 def create_content(request):
     try:
@@ -434,6 +434,20 @@ def create_content(request):
         if Content.objects.filter(content_name=data.get("content_name"), section=section, chapter=chapter, textbook=textbook).exists():
             return JsonResponse({"detail": "Content Block with this token already exists"}, status=400)
         
+        user_id = request.COOKIES.get('user_id')
+        role = request.COOKIES.get('role')
+
+        course = Course.objects.get(course_id=data.get("course_id"))
+
+        print(course.ta)
+        print(course.faculty)
+        if role=='ta' and not course.ta == User.objects.get(user_id=user_id):
+            return JsonResponse({"detail": "Not authorized to access this block"})
+
+        if role =='faculty' and not course.faculty == User.objects.get(user_id=user_id):
+            return JsonResponse({"detail": "Not authorized to access this block"})
+            
+
         # Create and save new content
         content = Content.objects.create(
             content_name=data.get("content_name"),
@@ -521,6 +535,17 @@ def content(request, content_name):
             return JsonResponse({"detail": "Content updated successfully"}, status=200)
         
         elif request.method == "DELETE":
+            user_id = request.COOKIES.get('user_id')
+            role = request.COOKIES.get('role')
+
+            course = Course.objects.get(course_id=data.get("course_id"))
+
+            if role=='ta' and not course.ta == User.objects.get(user_id=user_id):
+                return JsonResponse({"detail": "Not authorized to access this block"})
+
+            if role =='faculty' and not course.faculty == User.objects.get(user_id=user_id):
+                return JsonResponse({"detail": "Not authorized to access this block"})
+            
             content.delete()
             return JsonResponse({"detail": "Content deleted successfully"}, status=204)
     
@@ -1112,8 +1137,7 @@ def enroll_in_course(request):
         except KeyError as e:
             return JsonResponse({"detail": f"Missing key: {str(e)}"}, status=400)
         except Exception as e:
-            return JsonResponse({"detail": str(e)}, status=500)
-        
+            return JsonResponse({"detail": str(e)}, status=500)    
 
 @csrf_exempt
 @role_required(['faculty'])
@@ -1150,7 +1174,6 @@ def course_worklist(request, course_id):
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
     except Exception as e:
         return JsonResponse({"detail": str(e)}, status=500)
-
 
 @csrf_exempt
 @role_required(['admin', 'faculty', 'ta'])
@@ -1634,7 +1657,6 @@ def total_points(request):
 
         # Return the data as JSON
         return JsonResponse(result, safe=False)
-
 
 @csrf_exempt 
 def query(request):
